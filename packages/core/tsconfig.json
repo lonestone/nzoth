@@ -1,0 +1,38 @@
+/* eslint-disable jsonc/sort-keys */
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "moduleResolution": "node",
+    
+
+    // Decorators, required for some libs like mikro or nestjs
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    // Ensure a correct output
+    "baseUrl": "./",
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // Ensure declarations and sourcemaps are generated
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    // Strictness
+    "strict": true,
+    "strictBindCallApply": false,
+    "strictNullChecks": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Other options
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "module": "CommonJS"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
