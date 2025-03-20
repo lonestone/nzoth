@@ -1,5 +1,5 @@
-import { extendApi } from '@anatine/zod-openapi'
-import { z } from 'zod'
+import { createLiteralUnion } from '../utils/schema';
+import { z } from 'zod';
 
 export enum FilterRule {
   EQUALS = 'eq',
@@ -17,19 +17,21 @@ export enum FilterRule {
 }
 
 export interface Filtering {
-  property: string
-  rule: FilterRule
-  value?: string
+  property: string;
+  rule: FilterRule;
+  value?: string;
 }
 
 // Helper function to convert filters to string (useful for serialization)
 export function FiltersToString(filters: Filtering[]): string {
-  return filters.map((filter) => {
-    if (filter.value === undefined) {
-      return `${filter.property}:${filter.rule}`
-    }
-    return `${filter.property}:${filter.rule}:${filter.value}`
-  }).join(';')
+  return filters
+    .map(filter => {
+      if (filter.value === undefined) {
+        return `${filter.property}:${filter.rule}`;
+      }
+      return `${filter.property}:${filter.rule}:${filter.value}`;
+    })
+    .join(';');
 }
 
 /**
@@ -38,18 +40,17 @@ export function FiltersToString(filters: Filtering[]): string {
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function FilteringSchema<T extends readonly string[]>(availableFilteringKeys: T) {
-  return extendApi(z.object({
-    property: z.string().refine(value => availableFilteringKeys.includes(value), () => ({
-      message: `Invalid filtering property. Allowed properties are: ${availableFilteringKeys.join(', ')}`,
-      code: 'invalid_property',
-    })),
+export function FilteringSchema<T extends readonly [string, ...string[]]>(
+  availableFilteringKeys: T,
+) {
+  return z.object({
+    property: createLiteralUnion(availableFilteringKeys, 'filtering'),
     rule: z.nativeEnum(FilterRule),
     value: z.string().optional(),
-  }), {
+  }).openapi({
     title: 'FilteringSchema',
     description: 'Schema for a single filtering item',
-  })
+  });
 }
 
 /**
@@ -58,20 +59,23 @@ export function FilteringSchema<T extends readonly string[]>(availableFilteringK
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function FilteringStringItemSchema<T extends readonly string[]>(availableFilteringKeys: T) {
-  return z.string()
+export function FilteringStringItemSchema<T extends readonly [string, ...string[]]>(
+  availableFilteringKeys: T,
+) {
+  return z
+    .string()
     .superRefine((value, ctx) => {
-      const [, rule] = value.split(':')
+      const [, rule] = value.split(':');
       if (!Object.values(FilterRule).includes(rule as FilterRule)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Invalid filter rule. Expected one of: ${Object.values(FilterRule).join(', ')}`,
           path: [],
-        })
-        return z.NEVER
+        });
+        return z.NEVER;
       }
 
-      const parts = value.split(':')
+      const parts = value.split(':');
 
       // For IS_NULL and IS_NOT_NULL, exactly 2 parts are required
       if ([FilterRule.IS_NULL, FilterRule.IS_NOT_NULL].includes(rule as FilterRule)) {
@@ -80,8 +84,8 @@ export function FilteringStringItemSchema<T extends readonly string[]>(available
             code: z.ZodIssueCode.custom,
             message: 'IS_NULL and IS_NOT_NULL rules should not have a value',
             path: [],
-          })
-          return z.NEVER
+          });
+          return z.NEVER;
         }
       }
       // For other rules, exactly 3 parts are required
@@ -90,28 +94,28 @@ export function FilteringStringItemSchema<T extends readonly string[]>(available
           code: z.ZodIssueCode.custom,
           message: 'Value is required for this filter rule',
           path: [],
-        })
-        return z.NEVER
+        });
+        return z.NEVER;
       }
     })
     .transform((value): Filtering => {
-      const [property, rule, filterValue] = value.split(':')
+      const [property, rule, filterValue] = value.split(':');
 
       // For IS_NULL and IS_NOT_NULL, value is not needed
       if ([FilterRule.IS_NULL, FilterRule.IS_NOT_NULL].includes(rule as FilterRule)) {
         return {
           property,
           rule: rule as FilterRule,
-        }
+        };
       }
 
       return {
         property,
         rule: rule as FilterRule,
         value: filterValue,
-      }
+      };
     })
-    .pipe(FilteringSchema(availableFilteringKeys))
+    .pipe(FilteringSchema(availableFilteringKeys));
 }
 
 /**
@@ -120,21 +124,31 @@ export function FilteringStringItemSchema<T extends readonly string[]>(available
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function createFilterQueryStringSchema<T extends readonly string[]>(availableFilteringKeys: T) {
-  const itemSchema = FilteringStringItemSchema(availableFilteringKeys)
+export function createFilterQueryStringSchema<T extends readonly [string, ...string[]]>(
+  availableFilteringKeys: T,
+) {
+  const itemSchema = FilteringStringItemSchema(availableFilteringKeys);
 
-  return extendApi(z.string()
-    // filter(Boolean) removes empty strings
-    .transform(val => val?.split(';').filter(Boolean).map(s => s.trim()))
-    .pipe(z.array(itemSchema))
-    .optional(), {
-    title: 'FilterQueryStringSchema',
-    description: `Filtering query string, in the format of "property:rule[:value];property:rule[:value];..."
+  return (
+    z
+      .string()
+      // filter(Boolean) removes empty strings
+      .transform(val =>
+        val
+          ?.split(';')
+          .filter(Boolean)
+          .map(s => s.trim()),
+      )
+      .pipe(z.array(itemSchema))
+      .optional().openapi({
+        title: 'FilterQueryStringSchema',
+        description: `Filtering query string, in the format of "property:rule[:value];property:rule[:value];..."
     <br> Available rules: ${Object.values(FilterRule).join(', ')} 
     <br> Available properties: ${availableFilteringKeys.join(', ')}`,
-    example: 'name:eq:John;age:gt:30',
-  })
+        example: 'name:eq:John;age:gt:30',
+      })
+  );
 }
 
-export type FilteringItem = ReturnType<typeof FilteringStringItemSchema>
-export type FilteringQuery = ReturnType<typeof createFilterQueryStringSchema>
+export type FilteringItem = z.infer<ReturnType<typeof FilteringStringItemSchema>>;
+export type FilteringQuery = z.infer<ReturnType<typeof createFilterQueryStringSchema>>;

@@ -1,5 +1,5 @@
-import type { SortingQuery } from './sorting'
-import { TypedQuery } from '../validation/typed-query.decorator'
+import { TypedQuery } from '../validation/typed-query.decorator';
+import { createSortingQueryStringSchema } from './sorting';
 
 /**
  * Decorator for parsing and validating sorting parameters from query string
@@ -15,6 +15,6 @@ import { TypedQuery } from '../validation/typed-query.decorator'
  * }
  * ```
  */
-export function SortingParams(schema: SortingQuery) {
-  return TypedQuery('sort', schema, { optional: true })
+export function SortingParams(schema: ReturnType<typeof createSortingQueryStringSchema>) {
+  return TypedQuery('sort', schema, { optional: true });
 }

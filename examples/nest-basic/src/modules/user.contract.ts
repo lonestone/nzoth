@@ -5,6 +5,7 @@ import {
   createFilterQueryStringSchema,
   createSortingQueryStringSchema,
   createPaginationQuerySchema,
+  SortingQuery,
 } from '@lonestone/nzoth/server';
 
 // With openapi support to edit role
@@ -36,37 +37,40 @@ export const UserSchema = z
 
 export type User = z.infer<typeof UserSchema>;
 
-export const UsersSchema = z.array(UserSchema).openapi({
+export const UsersSchema = z.array(UserSchema.omit({ id: true })).openapi({
   title: 'Users',
   description: 'Users schema',
 });
 
 export type Users = z.infer<typeof UsersSchema>;
 
-export const UserCreateSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  age: z.number().positive(),
-  role: UserRole,
-  tags: UserTags,
-}).openapi({
-  title: 'UserCreate',
-  description: 'User create schema',
-});
+export const UserCreateSchema = z
+  .object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    age: z.number().positive(),
+    role: UserRole,
+    tags: UserTags,
+  })
+  .openapi({
+    title: 'UserCreate',
+    description: 'User create schema',
+  });
 
 export type UserCreate = z.infer<typeof UserCreateSchema>;
 
-export const UserUpdateSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  age: z.number().positive(),
-  role: UserRole,
-  tags: UserTags,
-}).openapi({
-  title: 'UserUpdate',
-  description: 'User update schema',
-  },
-);
+export const UserUpdateSchema = z
+  .object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    age: z.number().positive(),
+    role: UserRole,
+    tags: UserTags,
+  })
+  .openapi({
+    title: 'UserUpdate',
+    description: 'User update schema',
+  });
 
 export type UserUpdate = z.infer<typeof UserUpdateSchema>;
 
@@ -81,11 +85,15 @@ export const userFilteringSchema = createFilterQueryStringSchema(
   enabledUserFilteringKeys,
 );
 
-export const enabledUserSortingKeys = ['name', 'email', 'role', 'tags'];
+export type UserFiltering = z.infer<typeof userFilteringSchema>;
+
+export const enabledUserSortingKeys = ['name', 'email', 'role', 'tags'] as const;
 
 export const userSortingSchema = createSortingQueryStringSchema(
   enabledUserSortingKeys,
 );
+
+export type UserSorting = z.infer<typeof userSortingSchema>;
 
 export const userPaginationSchema = createPaginationQuerySchema({
   defaultPageSize: 10,

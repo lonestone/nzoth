@@ -1,6 +1,5 @@
-import type { ZodSchema, ZodType, ZodTypeDef } from "zod";
-import { z } from "zod";
-import { extendApi } from "@anatine/zod-openapi";
+import type { ZodType, ZodTypeDef } from 'zod';
+import { z } from 'zod';
 export const PaginationMetaSchema = z.object({
   offset: z.number(),
   pageSize: z.number(),
@@ -33,28 +32,26 @@ export function createPaginationQuerySchema(options?: {
   const minPageSize = options?.minPageSize ?? MIN_PAGE_SIZE;
 
   return z.preprocess(
-    (val) => (val == null ? {} : val),
-    extendApi(
+    val => (val == null ? {} : val),
+
       z.object({
         offset: z.coerce
           .number()
           .int()
           .min(0)
           .default(DEFAULT_OFFSET)
-          .describe("Starting position of the query"),
+          .describe('Starting position of the query'),
         pageSize: z.coerce
           .number()
           .int()
           .min(minPageSize)
           .max(maxPageSize)
           .default(defaultPageSize)
-          .describe("Number of items to return"),
-      }),
-      {
-        title: "PaginationQuerySchema",
-        description: "Schema for pagination query",
-      }
-    )
+          .describe('Number of items to return'),
+      }).openapi({
+        title: 'PaginationQuerySchema',
+        description: 'Schema for pagination query',
+    }),
   );
 }
 

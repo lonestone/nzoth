@@ -1,5 +1,8 @@
-import { type OpenAPIObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
-import type { SchemaObject, ReferenceObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
+import { type OpenAPIObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import type {
+  SchemaObject,
+  ReferenceObject,
+} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 // Define schema types
 export type SchemaType = 'Body' | 'Query' | 'Route' | 'Other';
@@ -15,12 +18,12 @@ export const SCHEMA_STORAGE: Record<SchemaType, Map<string, SchemaObject>> = {
 export function registerSchema(
   name: string,
   schema: SchemaObject,
-  type: SchemaType = 'Other'
+  type: SchemaType = 'Other',
 ): ReferenceObject {
   // Clean up the schema by removing any nested definitions that should be references
   function cleanupSchema(obj: SchemaObject): SchemaObject {
     const cleaned = { ...obj };
-    
+
     if (obj.title && obj.title !== name) {
       // If this is a named schema that isn't the root schema,
       // register it separately and return a reference
@@ -31,14 +34,17 @@ export function registerSchema(
     }
 
     if (obj.properties) {
-      cleaned.properties = Object.entries(obj.properties).reduce((acc, [key, value]) => {
-        if (typeof value === 'object' && !('$ref' in value)) {
-          acc[key] = cleanupSchema(value as SchemaObject);
-        } else {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, SchemaObject | ReferenceObject>);
+      cleaned.properties = Object.entries(obj.properties).reduce(
+        (acc, [key, value]) => {
+          if (typeof value === 'object' && !('$ref' in value)) {
+            acc[key] = cleanupSchema(value as SchemaObject);
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, SchemaObject | ReferenceObject>,
+      );
     }
 
     if (obj.items && typeof obj.items === 'object' && !('$ref' in obj.items)) {
@@ -49,7 +55,7 @@ export function registerSchema(
   }
 
   const cleanedSchema = cleanupSchema(schema);
-  
+
   // Store the schema in the appropriate type map
   SCHEMA_STORAGE[type].set(name, cleanedSchema);
 

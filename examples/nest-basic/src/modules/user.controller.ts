@@ -7,35 +7,70 @@ import {
   TypedParam,
   TypedRoute,
 } from '@lonestone/nzoth/server';
-import { UserCreate, UserCreateSchema, userFilteringSchema, userPaginationSchema, UserSchema, userSortingSchema, UsersSchema, UserUpdate, UserUpdateSchema } from './user.contract';
+import {
+  UserCreate,
+  UserCreateSchema,
+  UserFiltering,
+  userFilteringSchema,
+  UserPagination,
+  userPaginationSchema,
+  UserSchema,
+  UserSorting,
+  userSortingSchema,
+  UsersSchema,
+  UserUpdate,
+  UserUpdateSchema,
+} from './user.contract';
+import { users } from 'src/modules/user.data';
 
 @Controller('users')
 export class UserController {
   @TypedRoute.Get(undefined, UsersSchema)
   findAll(
-    @FilteringParams(userFilteringSchema) filters?: any[],
-    @PaginationParams(userPaginationSchema) pagination?: any,
-    @SortingParams(userSortingSchema) sort?: any[],
+    @FilteringParams(userFilteringSchema) filters?: UserFiltering,
+    @PaginationParams(userPaginationSchema) pagination?: UserPagination,
+    @SortingParams(userSortingSchema) sort?: UserSorting,
   ) {
-    // Implémentation fictive
-    return [
-      {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'user',
-        age: 30,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+    let filteredUsers = users;
+
+    if (filters) {
+      filteredUsers = filteredUsers.filter((user) => {
+        return filters.every((filter) => {
+          return user[filter.property] === filter.value;
+        });
+      });
+    }
+    
+    if (sort) {
+      filteredUsers = filteredUsers.sort((a, b) => {
+        for (const sortItem of sort) {
+          const aValue = a[sortItem.property];
+          const bValue = b[sortItem.property];
+          if (sortItem.direction === 'asc') {
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+              return aValue.localeCompare(bValue);
+            }
+            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          }
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            return bValue.localeCompare(aValue);
+          }
+          return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+        }
+        return 0;
+      });
+    }
+
+    if (pagination) {
+      filteredUsers = filteredUsers.slice(pagination.offset, pagination.offset + pagination.pageSize);
+    }
+
+    return filteredUsers;
   }
 
   @TypedRoute.Get(':id', UserSchema)
-  async findOne(
-    @TypedParam("id") id: string,
-  ) {
-    // Implémentation fictive
+  async findOne(@TypedParam('id') id: string) {
+    
     return {
       id,
       name: 'John Doe',
@@ -46,10 +81,8 @@ export class UserController {
   }
 
   @TypedRoute.Post('', UserSchema)
-  create(
-    @TypedBody(UserCreateSchema) userData: UserCreate,
-  ) {
-    // Implémentation fictive
+  create(@TypedBody(UserCreateSchema) userData: UserCreate) {
+    
     return {
       id: '123e4567-e89b-12d3-a456-426614174000',
       ...userData,
@@ -63,7 +96,7 @@ export class UserController {
     @TypedParam('id', 'uuid') id: string,
     @TypedBody(UserUpdateSchema) userData: UserUpdate,
   ) {
-    // Implémentation fictive
+    
     return {
       id,
       name: userData.name || 'John Doe',
@@ -77,7 +110,7 @@ export class UserController {
 
   @TypedRoute.Delete(':id')
   remove(@TypedParam('id', 'uuid') id: string) {
-    // Implémentation fictive
+    
     return id;
   }
 }
