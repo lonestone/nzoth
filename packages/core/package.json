@@ -1,6 +1,6 @@
 {
   "name": "@lonestone/nzoth",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": false,
   "description": "NZOTH: Nest + Zod + OpenAPI + Typed + Helpers - Build fully type-safe REST APIs with NestJS",
   "author": "Lonestone",

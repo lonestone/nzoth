@@ -9,7 +9,7 @@ jobs:
     name: 📦 Publish to npm
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # Need write permission to create version commit
       id-token: write
     steps:
       - name: Checkout code
