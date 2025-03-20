@@ -6,7 +6,7 @@ import { z } from 'zod';
  * @param keys - Array of at least two strings that will be used as literal types
  * @returns A Zod union schema of the literal types
  */
-export function createLiteralUnion<T extends readonly [string, ...string[]]>(keys: T, type:  'filtering' | 'sorting' | 'param') {
+export function createLiteralUnion<T extends readonly string[]>(keys: T, type:  'filtering' | 'sorting' | 'param') {
   return z
     .union(
       keys.map(key => z.literal(key)) as [

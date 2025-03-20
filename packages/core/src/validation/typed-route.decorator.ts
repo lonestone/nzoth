@@ -3,7 +3,7 @@ import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec
 import type { ZodType, ZodTypeDef } from 'zod';
 import { generateSchema } from '@anatine/zod-openapi';
 import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiResponse, ApiResponseOptions } from '@nestjs/swagger';
 import { map } from 'rxjs/operators';
 import { ZodSerializationException } from './validation.exception';
 import { registerSchema } from '../validation/typed-schema';
@@ -76,6 +76,7 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
   return function route<T>(
     path?: string | string[],
     schema?: ZodType<T, ZodTypeDef, any>,
+    options?: ApiResponseOptions
   ): MethodDecorator {
     if (!schema) {
       return ROUTERS[method](path);
@@ -119,7 +120,9 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
       status: 200,
       description: openApiSchema.description || 'Successful response',
       schema: refSchema,
+      ...options,
     });
+    
 
     // Apply the base decorator first, to ensure manually applied decorators will take precedence
     // Then apply the route method and interceptor

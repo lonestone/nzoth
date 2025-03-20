@@ -1,7 +1,7 @@
 import { createLiteralUnion } from '../utils/schema';
 import { z } from 'zod';
 
-export type Sort<T extends readonly [string, ...string[]]> = {
+export type Sort<T extends readonly string[]> = {
   property: T[number] & string;
   direction: z.infer<typeof SortDirection>;
 };
@@ -13,7 +13,7 @@ export const SortDirection = z.enum(['asc', 'desc'], {
   }),
 });
 
-export function SortingToString<T extends readonly [string, ...string[]]>(
+export function SortingToString<T extends readonly string[]>(
   sorting: Sort<T>[],
 ): string {
   return sorting.map(el => `${el.property}:${el.direction}`).join(',');
@@ -24,7 +24,7 @@ export function SortingToString<T extends readonly [string, ...string[]]>(
  * @param enabledKeys - The list of allowed properties
  * @returns A zod schema for sorting items
  */
-export function SortingSchema<T extends readonly [string, ...string[]]>(enabledKeys: T) {
+export function SortingSchema<T extends readonly string[]>(enabledKeys: T) {
   return z
     .object({
       property: createLiteralUnion(enabledKeys, 'sorting'),
@@ -42,7 +42,7 @@ export function SortingSchema<T extends readonly [string, ...string[]]>(enabledK
  * @param enabledKeys - The list of allowed properties
  * @returns A zod schema for sorting items
  */
-export function SortingStringSchema<T extends readonly [string, ...string[]]>(
+export function SortingStringSchema<T extends readonly string[]>(
   enabledKeys: T,
 ) {
   return z.string()
@@ -68,7 +68,7 @@ export function SortingStringSchema<T extends readonly [string, ...string[]]>(
  * @param enabledKeys - The list of allowed properties
  * @returns A zod schema for sorting items
  */
-export function createSortingQueryStringSchema<T extends readonly [string, ...string[]]>(
+export function createSortingQueryStringSchema<T extends readonly string[]>(
   enabledKeys: T,
 ) {
   return z
@@ -82,7 +82,7 @@ export function createSortingQueryStringSchema<T extends readonly [string, ...st
     });
 }
 
-export type SortingItem<T extends readonly [string, ...string[]]> = z.infer<
+export type SortingItem<T extends readonly string[]> = z.infer<
   ReturnType<typeof SortingStringSchema<T>>
 >;
 export type SortingQuery = z.infer<ReturnType<typeof createSortingQueryStringSchema>>;

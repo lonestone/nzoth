@@ -40,7 +40,7 @@ export function FiltersToString(filters: Filtering[]): string {
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function FilteringSchema<T extends readonly [string, ...string[]]>(
+export function FilteringSchema<T extends readonly string[]>(
   availableFilteringKeys: T,
 ) {
   return z.object({
@@ -59,7 +59,7 @@ export function FilteringSchema<T extends readonly [string, ...string[]]>(
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function FilteringStringItemSchema<T extends readonly [string, ...string[]]>(
+export function FilteringStringItemSchema<T extends readonly string[]>(
   availableFilteringKeys: T,
 ) {
   return z
@@ -124,7 +124,7 @@ export function FilteringStringItemSchema<T extends readonly [string, ...string[
  * @param availableFilteringKeys - The list of allowed properties
  * @returns A zod schema for filtering items
  */
-export function createFilterQueryStringSchema<T extends readonly [string, ...string[]]>(
+export function createFilterQueryStringSchema<T extends readonly string[]>(
   availableFilteringKeys: T,
 ) {
   const itemSchema = FilteringStringItemSchema(availableFilteringKeys);

@@ -7,19 +7,9 @@ import { extendApi as anatineExtendApi } from '@anatine/zod-openapi';
  *
  * @see {@link https://github.com/colinhacks/zod#module-augmentation Module Augmentation in Zod}
  */
-declare module 'zod' {
-  interface ZodType {
-    openapi(metadata?: {
-      title?: string;
-      description?: string;
-      example?: any;
-      [key: string]: any;
-    }): this;
-  }
-}
 
 // Add openapi method to ZodType prototype
 ZodType.prototype.openapi = function (metadata = {}) {
-  return anatineExtendApi(this, metadata);
+  return anatineExtendApi(this, metadata as any);
 };
 

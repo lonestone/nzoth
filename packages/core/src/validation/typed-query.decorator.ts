@@ -245,3 +245,4 @@ export function TypedQueryObject<T>(schema: ZodType<T, ZodTypeDef, any>) {
     return paramDecorator()(target, propertyKey, parameterIndex);
   };
 }
+

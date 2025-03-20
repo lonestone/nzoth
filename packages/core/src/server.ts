@@ -1,5 +1,6 @@
 import { ZodType } from 'zod';
 import { extendApi as anatineExtendApi } from '@anatine/zod-openapi';
+import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface.js';
 
 /**
  * ⚠️ WARNING: This code augments the Zod module by adding a .openapi() method to all Zod types.
@@ -10,18 +11,13 @@ import { extendApi as anatineExtendApi } from '@anatine/zod-openapi';
  */
 declare module 'zod' {
   interface ZodType {
-    openapi(metadata?: {
-      title?: string;
-      description?: string;
-      example?: any;
-      [key: string]: any;
-    }): this;
+    openapi(metadata?: SchemaObject): this;
   }
 }
 
 // Add openapi method to ZodType prototype
 ZodType.prototype.openapi = function (metadata = {}) {
-  return anatineExtendApi(this, metadata);
+  return anatineExtendApi(this, metadata as any);
 };
 
 export * from './crud/get.contract.js';

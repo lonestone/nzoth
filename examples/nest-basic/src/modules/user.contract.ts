@@ -78,11 +78,14 @@ export const enabledUserFilteringKeys = [
   'email',
   'role',
   'tags',
-] as const;
+] as const
 
 export const userFilteringSchema = createFilterQueryStringSchema(
   enabledUserFilteringKeys,
-);
+).openapi({
+  title: 'UserFiltering',
+  description: 'User filtering schema',
+});
 
 export type UserFiltering = z.infer<typeof userFilteringSchema>;
 
@@ -90,7 +93,11 @@ export const enabledUserSortingKeys = ['name', 'email', 'role', 'tags'] as const
 
 export const userSortingSchema = createSortingQueryStringSchema(
   enabledUserSortingKeys,
-);
+).openapi({
+  title: 'UserSorting',
+  enum: enabledUserSortingKeys.map(key => `${key}:asc,${key}:desc`),
+  example: 'name:asc,email:desc',
+});
 
 export type UserSorting = z.infer<typeof userSortingSchema>;
 
@@ -98,6 +105,9 @@ export const userPaginationSchema = createPaginationQuerySchema({
   defaultPageSize: 10,
   maxPageSize: 100,
   minPageSize: 1,
+}).openapi({
+  title: 'UserPagination',
+  description: 'User pagination schema',
 });
 
 export type UserPagination = z.infer<typeof userPaginationSchema>;
