@@ -5,7 +5,6 @@ import {
   createFilterQueryStringSchema,
   createSortingQueryStringSchema,
   createPaginationQuerySchema,
-  SortingQuery,
 } from '@lonestone/nzoth/server';
 
 // With openapi support to edit role
