@@ -1,9 +1,9 @@
-import { Controller } from '@nestjs/common';
 import {
   FilteringParams,
   PaginationParams,
   SortingParams,
   TypedBody,
+  TypedController,
   TypedParam,
   TypedRoute,
 } from '@lonestone/nzoth/server';
@@ -22,16 +22,23 @@ import {
   UserUpdateSchema,
 } from './user.contract';
 import { users } from 'src/modules/user.data';
+import { z } from 'zod';
 
-@Controller('users')
+@TypedController(
+  '/:clientId/users',
+  z.object({
+    clientId: z.string().uuid(),
+  }),
+)
 export class UserController {
   @TypedRoute.Get(undefined, UsersSchema)
   findAll(
+    @TypedParam('clientId') clientId: string,
     @FilteringParams(userFilteringSchema) filters?: UserFiltering,
     @PaginationParams(userPaginationSchema) pagination?: UserPagination,
     @SortingParams(userSortingSchema) sort?: UserSorting,
   ) {
-    let filteredUsers = users;
+    let filteredUsers = users.filter((user) => user.clientId === clientId);
 
     if (filters) {
       filteredUsers = filteredUsers.filter((user) => {
@@ -40,7 +47,7 @@ export class UserController {
         });
       });
     }
-    
+
     if (sort) {
       filteredUsers = filteredUsers.sort((a, b) => {
         for (const sortItem of sort) {
@@ -62,7 +69,10 @@ export class UserController {
     }
 
     if (pagination) {
-      filteredUsers = filteredUsers.slice(pagination.offset, pagination.offset + pagination.pageSize);
+      filteredUsers = filteredUsers.slice(
+        pagination.offset,
+        pagination.offset + pagination.pageSize,
+      );
     }
 
     return filteredUsers;
@@ -70,24 +80,20 @@ export class UserController {
 
   @TypedRoute.Get(':id', UserSchema)
   async findOne(@TypedParam('id') id: string) {
-    
-    return {
-      id,
-      name: 'John Doe',
-      email: 'john@example.com',
-      age: 30,
-      role: 'user',
-    };
+    return users.find((user) => user.id === id);
   }
 
   @TypedRoute.Post('', UserSchema)
-  create(@TypedBody(UserCreateSchema) userData: UserCreate) {
-    
+  create(
+    @TypedParam('clientId') clientId: string,
+    @TypedBody(UserCreateSchema) userData: UserCreate,
+  ) {
     return {
       id: '123e4567-e89b-12d3-a456-426614174000',
       ...userData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      clientId,
     };
   }
 
@@ -96,13 +102,13 @@ export class UserController {
     @TypedParam('id', 'uuid') id: string,
     @TypedBody(UserUpdateSchema) userData: UserUpdate,
   ) {
-    
     return {
       id,
       name: userData.name || 'John Doe',
       email: userData.email || 'john@example.com',
       role: userData.role || 'user',
       age: userData.age || 30,
+      clientId: '123e4567-e89b-12d3-a456-426614174000',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -110,7 +116,6 @@ export class UserController {
 
   @TypedRoute.Delete(':id')
   remove(@TypedParam('id', 'uuid') id: string) {
-    
     return id;
   }
 }

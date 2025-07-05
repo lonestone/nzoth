@@ -14,6 +14,7 @@ A collection of NestJS utilities for building RESTful APIs with support for filt
 # Why NZOTH?
 
 NZOTH combines the best of all worlds:
+
 - **N**estJS: The progressive Node.js framework for building efficient, reliable, and scalable server-side applications
 - **Z**od: TypeScript-first schema validation with static type inference
 - **O**penAPI: Automated API documentation that stays in sync with your code
@@ -71,17 +72,19 @@ export const UserRole = z.enum(['admin', 'user']).openapi({
 });
 
 // Define the main schema with OpenAPI metadata
-export const UserSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(2),
-  email: z.string().email(),
-  age: z.number().positive(),
-  role: UserRole,
-  tags: z.array(z.string())
-}).openapi({
-  title: 'User',
-  description: 'User schema',
-});
+export const UserSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().min(2),
+    email: z.string().email(),
+    age: z.number().positive(),
+    role: UserRole,
+    tags: z.array(z.string()),
+  })
+  .openapi({
+    title: 'User',
+    description: 'User schema',
+  });
 
 // Create derived schemas
 export const UserCreateSchema = z.openapi(UserSchema.omit({ id: true }), {
@@ -105,16 +108,25 @@ export type UserUpdate = z.infer<typeof UserUpdateSchema>;
 Use `TypedRoute` decorators to validate response data:
 
 ```typescript
-@Controller('users')
+// All routes in this controller will require the clientId parameter
+// But we do not need to define it in the route path if not needed for the route logic (See put)
+// Ownership should be checked in a Guard, not inside the controller
+@TypedController(
+  '/clients/:clientId/users',
+  z.object({
+    clientId: z.string().uuid(),
+  }),
+)
 class UserController {
   @TypedRoute.Get(undefined, UsersSchema)
   findAll(
+    @TypedParam('clientId') clientId: string,
     @FilteringParams(userFilteringSchema) filters?: any[],
     @PaginationParams(userPaginationSchema) pagination?: any,
     @SortingParams(userSortingSchema) sort?: any[],
   ): User[] {
     // Response will be validated against UsersSchema
-    return this.userService.findAll(filters, pagination, sort);
+    return this.userService.findAll(clientId, filters, pagination, sort);
   }
 
   @TypedRoute.Get(':id', UserSchema)
@@ -124,16 +136,19 @@ class UserController {
   }
 
   @TypedRoute.Post('', UserSchema)
-  create(@TypedBody(UserCreateSchema) userData: UserCreate): User {
+  create(
+    @TypedParam('clientId') clientId: string,
+    @TypedBody(UserCreateSchema) userData: UserCreate,
+  ): User {
     // Request body validated against UserCreateSchema
     // Response validated against UserSchema
-    return this.userService.create(userData);
+    return this.userService.create(clientId, userData);
   }
 
   @TypedRoute.Put(':id', UserUpdateSchema)
   update(
     @TypedParam('id', 'uuid') id: string,
-    @TypedBody(UserUpdateSchema) userData: UserUpdate
+    @TypedBody(UserUpdateSchema) userData: UserUpdate,
   ): User {
     // Both request and response are validated
     return this.userService.update(id, userData);
@@ -152,28 +167,14 @@ Define your filtering, pagination, and sorting schemas:
 
 ```typescript
 // Filtering
-export const enabledUserFilteringKeys = [
-  "name",
-  "email",
-  "role",
-  "tags",
-] as const;
+export const enabledUserFilteringKeys = ['name', 'email', 'role', 'tags'] as const;
 
-export const userFilteringSchema = createFilterQueryStringSchema(
-  enabledUserFilteringKeys
-);
+export const userFilteringSchema = createFilterQueryStringSchema(enabledUserFilteringKeys);
 
 // Sorting
-export const enabledUserSortingKeys = [
-  "name",
-  "email",
-  "role",
-  "tags",
-];
+export const enabledUserSortingKeys = ['name', 'email', 'role', 'tags'];
 
-export const userSortingSchema = createSortingQueryStringSchema(
-  enabledUserSortingKeys
-);
+export const userSortingSchema = createSortingQueryStringSchema(enabledUserSortingKeys);
 
 // Pagination
 export const userPaginationSchema = createPaginationQuerySchema({
@@ -188,6 +189,7 @@ export type UserPagination = z.infer<typeof userPaginationSchema>;
 ### Filtering
 
 Supported filter rules:
+
 - `eq` - Equals
 - `neq` - Not equals
 - `gt` - Greater than
