@@ -1,12 +1,13 @@
-import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import type { ZodType, ZodTypeDef } from 'zod';
-import { generateSchema } from '@anatine/zod-openapi';
-import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common';
-import { ApiResponse, ApiResponseOptions } from '@nestjs/swagger';
-import { map } from 'rxjs/operators';
-import { ZodSerializationException } from './validation.exception';
-import { registerSchema } from '../validation/typed-schema';
+import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common'
+import type { ApiResponseOptions } from '@nestjs/swagger'
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import type { ZodType, ZodTypeDef } from 'zod'
+import { generateSchema } from '@anatine/zod-openapi'
+import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common'
+import { ApiResponse } from '@nestjs/swagger'
+import { map } from 'rxjs/operators'
+import { registerSchema } from '../validation/typed-schema'
+import { ZodSerializationException } from './validation.exception'
 
 /**
  * Interceptor that validates response data against a Zod schema
@@ -16,14 +17,14 @@ class TypedRouteInterceptor implements NestInterceptor {
 
   intercept(_: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
-      map(value => {
-        const result = this.schema.safeParse(value);
+      map((value) => {
+        const result = this.schema.safeParse(value)
         if (!result.success) {
-          throw new ZodSerializationException(result.error);
+          throw new ZodSerializationException(result.error)
         }
-        return result.data;
+        return result.data
       }),
-    );
+    )
   }
 }
 
@@ -33,21 +34,21 @@ const ROUTERS = {
   Put,
   Patch,
   Delete,
-} as const;
+} as const
 
 // Store pending route metadata that needs controller parameters
 export const PENDING_ROUTE_METADATA = new Map<
   string,
   Array<{
-    target: any;
-    propertyKey: string | symbol;
-    descriptor: PropertyDescriptor;
-    path?: string | string[];
-    schema?: ZodType<any, ZodTypeDef, any>;
-    options?: ApiResponseOptions;
-    method: keyof typeof ROUTERS;
+    target: any
+    propertyKey: string | symbol
+    descriptor: PropertyDescriptor
+    path?: string | string[]
+    schema?: ZodType<any, ZodTypeDef, any>
+    options?: ApiResponseOptions
+    method: keyof typeof ROUTERS
   }>
->();
+>()
 
 /**
  * Apply controller parameters to a route after controller is processed
@@ -98,50 +99,50 @@ export function applyControllerParamsToRoute(
   // For now, just apply a simple route without controller params - this will be enhanced
   if (!schema) {
     if (method) {
-      ROUTERS[method](path)(target, propertyKey, descriptor);
+      ROUTERS[method](path)(target, propertyKey, descriptor)
     }
-    return;
+    return
   }
 
   // Apply the full route with schema validation
-  const openApiSchema = generateSchema(schema) as SchemaObject;
-  const schemaName =
-    openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`;
+  const openApiSchema = generateSchema(schema) as SchemaObject
+  const schemaName
+    = openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`
 
   function registerNestedSchemas(schema: SchemaObject) {
     if (schema.title) {
-      registerSchema(schema.title, schema, 'Route');
+      registerSchema(schema.title, schema, 'Route')
     }
 
     if (schema.properties) {
-      Object.values(schema.properties).forEach(prop => {
+      Object.values(schema.properties).forEach((prop) => {
         if (typeof prop === 'object' && !('$ref' in prop)) {
-          registerNestedSchemas(prop as SchemaObject);
+          registerNestedSchemas(prop as SchemaObject)
         }
-      });
+      })
     }
 
     if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-      registerNestedSchemas(schema.items as SchemaObject);
+      registerNestedSchemas(schema.items as SchemaObject)
     }
   }
 
-  registerNestedSchemas(openApiSchema);
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Route');
+  registerNestedSchemas(openApiSchema)
+  const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
 
   const baseDecorator = ApiResponse({
     status: 200,
     description: openApiSchema.description || 'Successful response',
     schema: refSchema,
     ...options,
-  });
+  })
 
   if (method) {
     applyDecorators(
       baseDecorator,
       ROUTERS[method](path),
       UseInterceptors(new TypedRouteInterceptor(schema)),
-    )(target, propertyKey, descriptor);
+    )(target, propertyKey, descriptor)
   }
 }
 
@@ -157,9 +158,9 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
   ): MethodDecorator {
     return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
       // Store route metadata for later processing by TypedController
-      const controllerName = target.constructor.name;
+      const controllerName = target.constructor.name
       if (!PENDING_ROUTE_METADATA.has(controllerName)) {
-        PENDING_ROUTE_METADATA.set(controllerName, []);
+        PENDING_ROUTE_METADATA.set(controllerName, [])
       }
 
       PENDING_ROUTE_METADATA.get(controllerName)!.push({
@@ -170,55 +171,55 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
         schema,
         options,
         method,
-      });
+      })
 
       // Apply basic route decorator for now - will be enhanced by TypedController
       if (!schema) {
-        ROUTERS[method](path)(target, propertyKey, descriptor);
-        return;
+        ROUTERS[method](path)(target, propertyKey, descriptor)
+        return
       }
 
       // Generate schema and register all nested schemas
-      const openApiSchema = generateSchema(schema) as SchemaObject;
-      const schemaName =
-        openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`;
+      const openApiSchema = generateSchema(schema) as SchemaObject
+      const schemaName
+        = openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`
 
       function registerNestedSchemas(schema: SchemaObject) {
         if (schema.title) {
-          registerSchema(schema.title, schema, 'Route');
+          registerSchema(schema.title, schema, 'Route')
         }
 
         if (schema.properties) {
-          Object.values(schema.properties).forEach(prop => {
+          Object.values(schema.properties).forEach((prop) => {
             if (typeof prop === 'object' && !('$ref' in prop)) {
-              registerNestedSchemas(prop as SchemaObject);
+              registerNestedSchemas(prop as SchemaObject)
             }
-          });
+          })
         }
 
         if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-          registerNestedSchemas(schema.items as SchemaObject);
+          registerNestedSchemas(schema.items as SchemaObject)
         }
       }
 
-      registerNestedSchemas(openApiSchema);
-      const refSchema = registerSchema(schemaName, openApiSchema, 'Route');
+      registerNestedSchemas(openApiSchema)
+      const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
 
       const baseDecorator = ApiResponse({
         status: 200,
         description: openApiSchema.description || 'Successful response',
         schema: refSchema,
         ...options,
-      });
+      })
 
       // Apply base decorators for now
       applyDecorators(
         baseDecorator,
         ROUTERS[method](path),
         UseInterceptors(new TypedRouteInterceptor(schema)),
-      )(target, propertyKey, descriptor);
-    };
-  };
+      )(target, propertyKey, descriptor)
+    }
+  }
 }
 
 export const TypedRoute = {
@@ -227,4 +228,4 @@ export const TypedRoute = {
   Put: createRouteDecorator('Put'),
   Patch: createRouteDecorator('Patch'),
   Delete: createRouteDecorator('Delete'),
-} as const;
+} as const

@@ -1,31 +1,31 @@
-import type { ExecutionContext } from '@nestjs/common';
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import type { ZodType, ZodTypeDef } from 'zod';
-import { generateSchema } from '@anatine/zod-openapi';
-import { BadRequestException, createParamDecorator } from '@nestjs/common';
-import { ApiBody } from '@nestjs/swagger';
-import { z } from 'zod';
-import { ZodValidationException } from './validation.exception';
-import { registerSchema } from './typed-schema';
+import type { ExecutionContext } from '@nestjs/common'
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import type { ZodType, ZodTypeDef } from 'zod'
+import { generateSchema } from '@anatine/zod-openapi'
+import { BadRequestException, createParamDecorator } from '@nestjs/common'
+import { ApiBody } from '@nestjs/swagger'
+import { z } from 'zod'
+import { registerSchema } from './typed-schema'
+import { ZodValidationException } from './validation.exception'
 
 function isApplicationJson(contentType?: string): boolean {
   return (
-    contentType !== undefined &&
-    contentType
+    contentType !== undefined
+    && contentType
       .split(';')
       .map(str => str.trim())
       .includes('application/json')
-  );
+  )
 }
 
 function isFormUrlEncoded(contentType?: string): boolean {
   return (
-    contentType !== undefined &&
-    contentType
+    contentType !== undefined
+    && contentType
       .split(';')
       .map(str => str.trim())
       .includes('application/x-www-form-urlencoded')
-  );
+  )
 }
 
 /**
@@ -60,62 +60,63 @@ function isFormUrlEncoded(contentType?: string): boolean {
  */
 export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
   // Generate OpenAPI schema
-  const openApiSchema = generateSchema(schema) as SchemaObject;
+  const openApiSchema = generateSchema(schema) as SchemaObject
 
   // Format Name
-  const schemaName = openApiSchema.title || `Body_${Date.now()}`;
+  const schemaName = openApiSchema.title || `Body_${Date.now()}`
 
   // Register all nested schemas recursively
   function registerNestedSchemas(schema: SchemaObject) {
     if (schema.title) {
-      registerSchema(schema.title, schema, 'Body');
+      registerSchema(schema.title, schema, 'Body')
     }
 
     // Handle nested objects
     if (schema.properties) {
-      Object.values(schema.properties).forEach(prop => {
+      Object.values(schema.properties).forEach((prop) => {
         if (typeof prop === 'object' && !('$ref' in prop)) {
-          registerNestedSchemas(prop as SchemaObject);
+          registerNestedSchemas(prop as SchemaObject)
         }
-      });
+      })
     }
 
     // Handle arrays
     if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-      registerNestedSchemas(schema.items as SchemaObject);
+      registerNestedSchemas(schema.items as SchemaObject)
     }
   }
 
-  registerNestedSchemas(openApiSchema);
+  registerNestedSchemas(openApiSchema)
 
   // Register the main schema and get the reference
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Body');
+  const refSchema = registerSchema(schemaName, openApiSchema, 'Body')
 
   // Create our base ApiBody decorator first
   const baseDecorator = ApiBody({
     required: true,
     schema: refSchema,
     description: openApiSchema.description,
-  });
+  })
 
   // Create parameter decorator for validation
   const paramDecorator = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const contentType = request.headers['content-type'];
+    const request = ctx.switchToHttp().getRequest()
+    const contentType = request.headers['content-type']
 
     if (!isApplicationJson(contentType)) {
-      throw new BadRequestException('Content-Type must be application/json');
+      throw new BadRequestException('Content-Type must be application/json')
     }
 
     try {
-      return schema.parse(request.body);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        throw new ZodValidationException(err);
-      }
-      throw err;
+      return schema.parse(request.body)
     }
-  });
+    catch (err) {
+      if (err instanceof z.ZodError) {
+        throw new ZodValidationException(err)
+      }
+      throw err
+    }
+  })
 
   // Return a decorator that applies our base ApiBody first (so manual decorators take precedence)
   return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
@@ -124,9 +125,9 @@ export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
       writable: true,
       enumerable: true,
       configurable: true,
-    });
-    return paramDecorator()(target, propertyKey, parameterIndex);
-  };
+    })
+    return paramDecorator()(target, propertyKey, parameterIndex)
+  }
 }
 
 /**
@@ -161,36 +162,36 @@ export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
  */
 export function TypedFormBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
   // Generate OpenAPI schema
-  const openApiSchema = generateSchema(schema) as SchemaObject;
+  const openApiSchema = generateSchema(schema) as SchemaObject
 
   // Format Name
-  const schemaName = openApiSchema.title || `FormBody_${Date.now()}`;
+  const schemaName = openApiSchema.title || `FormBody_${Date.now()}`
 
   // Register all nested schemas recursively
   function registerNestedSchemas(schema: SchemaObject) {
     if (schema.title) {
-      registerSchema(schema.title, schema, 'Body');
+      registerSchema(schema.title, schema, 'Body')
     }
 
     // Handle nested objects
     if (schema.properties) {
-      Object.values(schema.properties).forEach(prop => {
+      Object.values(schema.properties).forEach((prop) => {
         if (typeof prop === 'object' && !('$ref' in prop)) {
-          registerNestedSchemas(prop as SchemaObject);
+          registerNestedSchemas(prop as SchemaObject)
         }
-      });
+      })
     }
 
     // Handle arrays
     if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-      registerNestedSchemas(schema.items as SchemaObject);
+      registerNestedSchemas(schema.items as SchemaObject)
     }
   }
 
-  registerNestedSchemas(openApiSchema);
+  registerNestedSchemas(openApiSchema)
 
   // Register the main schema and get the reference
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Body');
+  const refSchema = registerSchema(schemaName, openApiSchema, 'Body')
 
   // Create our base ApiBody decorator first
   const baseDecorator = ApiBody({
@@ -198,29 +199,30 @@ export function TypedFormBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
     schema: refSchema,
     description: openApiSchema.description,
     type: 'object',
-  });
+  })
 
   // Create parameter decorator for validation
   const paramDecorator = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const contentType = request.headers['content-type'];
+    const request = ctx.switchToHttp().getRequest()
+    const contentType = request.headers['content-type']
 
     if (!isFormUrlEncoded(contentType)) {
-      throw new BadRequestException('Content-Type must be application/x-www-form-urlencoded');
+      throw new BadRequestException('Content-Type must be application/x-www-form-urlencoded')
     }
 
     // Convert URLSearchParams to object
-    const formData = new URLSearchParams(request.body);
-    const data = Object.fromEntries(formData);
+    const formData = new URLSearchParams(request.body)
+    const data = Object.fromEntries(formData)
     try {
-      return schema.parse(data);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        throw new ZodValidationException(err);
-      }
-      throw err;
+      return schema.parse(data)
     }
-  });
+    catch (err) {
+      if (err instanceof z.ZodError) {
+        throw new ZodValidationException(err)
+      }
+      throw err
+    }
+  })
 
   // Return a decorator that applies our base ApiBody first (so manual decorators take precedence)
   return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
@@ -229,7 +231,7 @@ export function TypedFormBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
       writable: true,
       enumerable: true,
       configurable: true,
-    });
-    return paramDecorator()(target, propertyKey, parameterIndex);
-  };
+    })
+    return paramDecorator()(target, propertyKey, parameterIndex)
+  }
 }

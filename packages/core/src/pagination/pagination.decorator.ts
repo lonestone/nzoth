@@ -1,10 +1,10 @@
-import type { PaginationQuery } from './pagination';
-import { TypedQueryObject } from '../validation/typed-query.decorator';
+import type { PaginationQuery } from './pagination'
+import { TypedQueryObject } from '../validation/typed-query.decorator'
 
 export interface PaginationOptions {
-  defaultPageSize?: number;
-  maxPageSize?: number;
-  minPageSize?: number;
+  defaultPageSize?: number
+  maxPageSize?: number
+  minPageSize?: number
 }
 
 /**
@@ -25,5 +25,5 @@ export interface PaginationOptions {
  * ```
  */
 export function PaginationParams(schema: PaginationQuery) {
-  return TypedQueryObject(schema);
+  return TypedQueryObject(schema)
 }
