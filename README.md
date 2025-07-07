@@ -13,7 +13,7 @@ A collection of NestJS utilities for building RESTful APIs with support for filt
 
 # Why NZOTH?
 
-NZOTH combines the best of all worlds:
+NZOTH significations:
 
 - **N**estJS: The progressive Node.js framework for building efficient, reliable, and scalable server-side applications
 - **Z**od: TypeScript-first schema validation with static type inference

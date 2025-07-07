@@ -1,7 +1,7 @@
 {
   "name": "@lonestone/nzoth-example-nest-basic",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Nest TypeScript starter repository",
   "license": "MIT",
   "scripts": {
