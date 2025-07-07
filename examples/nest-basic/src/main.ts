@@ -1,10 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { addSchemasToSwagger } from '@lonestone/nzoth/server';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { addSchemasToSwagger } from '@lonestone/nzoth/server'
+import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule)
 
   const swaggerConfig = new DocumentBuilder()
     .setOpenAPIVersion('3.1.0')
@@ -12,11 +12,11 @@ async function bootstrap() {
     .setDescription('The Lonestone API description')
     .setVersion('1.0')
     .addTag('@lonestone')
-    .build();
+    .build()
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig)
 
-  addSchemasToSwagger(document);
+  addSchemasToSwagger(document)
 
   SwaggerModule.setup('docs', app, document, {
     jsonDocumentUrl: '/docs-json',
@@ -40,8 +40,8 @@ async function bootstrap() {
       tagsSorter: 'alpha',
       operationsSorter: 'alpha',
     },
-  });
+  })
 
-  await app.listen(3000);
+  await app.listen(3000)
 }
-bootstrap();
+bootstrap()

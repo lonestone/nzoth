@@ -1,5 +1,5 @@
-import { ZodType } from 'zod';
-import { extendApi as anatineExtendApi } from '@anatine/zod-openapi';
+import { extendApi as anatineExtendApi } from '@anatine/zod-openapi'
+import { ZodType } from 'zod'
 /**
  * ⚠️ WARNING: This code augments the Zod module by adding a .openapi() method to all Zod types.
  * This is a global modification that affects all Zod instances in your application.
@@ -10,6 +10,5 @@ import { extendApi as anatineExtendApi } from '@anatine/zod-openapi';
 
 // Add openapi method to ZodType prototype
 ZodType.prototype.openapi = function (metadata = {}) {
-  return anatineExtendApi(this, metadata as any);
-};
-
+  return anatineExtendApi(this, metadata as any)
+}

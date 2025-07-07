@@ -1,37 +1,37 @@
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { generateSchema, extendApi as anatineExtendApi, extendApi } from '@anatine/zod-openapi';
-import { z, ZodType } from 'zod';
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import type { ZodType } from 'zod'
+import { extendApi as anatineExtendApi, extendApi, generateSchema } from '@anatine/zod-openapi'
 
 // Type pour schéma Zod avec .openapi()
 type ZodWithOpenApi<T extends ZodType> = T & {
-  openapi: (metadata?: Record<string, any>) => T;
-};
+  openapi: (metadata?: Record<string, any>) => T
+}
 
 /**
  * Fonction pour ajouter .openapi() à un schéma Zod
  */
 function addOpenApiMethod<T extends ZodType>(schema: T): ZodWithOpenApi<T> {
-  const enhancedSchema = schema as ZodWithOpenApi<T>;
+  const enhancedSchema = schema as ZodWithOpenApi<T>
 
-  if (!enhancedSchema.hasOwnProperty('openapi')) {
+  if (!Object.prototype.hasOwnProperty.call(enhancedSchema, 'openapi')) {
     Object.defineProperty(enhancedSchema, 'openapi', {
-      value: function (metadata: Record<string, any> = {}) {
-        return anatineExtendApi(this, metadata);
+      value(metadata: Record<string, any> = {}) {
+        return anatineExtendApi(this, metadata)
       },
       configurable: true,
       writable: true,
       enumerable: false,
-    });
+    })
   }
 
-  return enhancedSchema;
+  return enhancedSchema
 }
 
 /**
  * Convertit un schéma Zod en schéma OpenAPI
  */
 export function toOpenApi<T>(schema: ZodType<T>): SchemaObject {
-  return generateSchema(schema) as SchemaObject;
+  return generateSchema(schema) as SchemaObject
 }
 
 /**
@@ -41,25 +41,24 @@ export function withOpenApi<T extends ZodType>(
   schema: T,
   metadata?: Record<string, any>,
 ): ZodWithOpenApi<T> {
-  const enhanced = addOpenApiMethod(schema);
+  const enhanced = addOpenApiMethod(schema)
 
   if (metadata) {
-    return enhanced.openapi(metadata) as ZodWithOpenApi<T>;
+    return enhanced.openapi(metadata) as ZodWithOpenApi<T>
   }
 
-  return enhanced;
+  return enhanced
 }
 
 // Pour la compatibilité avec le code existant
 export function zodToOpenApi<T>(schema: ZodType<T>, options?: Record<string, any>): SchemaObject {
   if (options) {
-    schema = extendApi(schema, options);
+    schema = extendApi(schema, options)
   }
-  return toOpenApi(schema);
+  return toOpenApi(schema)
 }
 
-
-/* 
+/*
   Other way to overload zod with openapi and keep original z
 /*
 
@@ -78,7 +77,6 @@ export function zodToOpenApi<T>(schema: ZodType<T>, options?: Record<string, any
 //   openapi: <T extends ZodType>(schema: T, metadata?: Record<string, any>) => ZodWithOpenApi<T>;
 //   toOpenApi: <T>(schema: ZodType<T>) => SchemaObject;
 // };
-
 
 // /**
 //  * Version dynamique de zOpenApi qui expose une API type-safe et supporte automatiquement toutes les méthodes de Zod
@@ -115,5 +113,3 @@ export function zodToOpenApi<T>(schema: ZodType<T>, options?: Record<string, any
 //     return originalMethod;
 //   }
 // }) as unknown as ZodOpenApiMethods;
-
-

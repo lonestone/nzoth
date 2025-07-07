@@ -1,11 +1,11 @@
-import type { INestApplication } from '@nestjs/common';
-import { Controller, Module, Post } from '@nestjs/common';
-import { ApiBody } from '@nestjs/swagger';
-import { Test } from '@nestjs/testing';
-import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { z } from 'zod';
-import { TypedBody, TypedFormBody } from './typed-body.decorator';
+import type { INestApplication } from '@nestjs/common'
+import { Controller, Module, Post } from '@nestjs/common'
+import { ApiBody } from '@nestjs/swagger'
+import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { z } from 'zod'
+import { TypedBody, TypedFormBody } from './typed-body.decorator'
 
 // Test schemas
 const CreateUserSchema = z
@@ -17,9 +17,9 @@ const CreateUserSchema = z
   .openapi({
     title: 'CreateUserSchema',
     description: 'Schema for creating a user',
-  });
+  })
 
-type CreateUserDto = z.infer<typeof CreateUserSchema>;
+type CreateUserDto = z.infer<typeof CreateUserSchema>
 
 const FileUploadSchema = z
   .object({
@@ -29,16 +29,16 @@ const FileUploadSchema = z
   .openapi({
     title: 'FileUploadSchema',
     description: 'Schema for file upload',
-  });
+  })
 
-type FileUploadDto = z.infer<typeof FileUploadSchema>;
+type FileUploadDto = z.infer<typeof FileUploadSchema>
 
 // Test controller
 @Controller('typed-body')
 class TestController {
   @Post()
   simpleBody(@TypedBody(CreateUserSchema) data: CreateUserDto) {
-    return data;
+    return data
   }
 
   @Post('nested')
@@ -47,25 +47,25 @@ class TestController {
       z.object({
         user: CreateUserSchema,
         metadata: z.object({
-            tags: z.array(z.string()),
+          tags: z.array(z.string()),
         }),
       })
-      .openapi({
-        title: 'NestedUserSchema',
-        description: 'Schema for nested user data with metadata',
-      }),
+        .openapi({
+          title: 'NestedUserSchema',
+          description: 'Schema for nested user data with metadata',
+        }),
     )
     data: {
-      user: CreateUserDto;
-      metadata: { tags: string[] };
+      user: CreateUserDto
+      metadata: { tags: string[] }
     },
   ) {
-    return data;
+    return data
   }
 
   @Post('form')
   formBody(@TypedFormBody(FileUploadSchema) data: FileUploadDto) {
-    return data;
+    return data
   }
 
   @Post('override')
@@ -82,7 +82,7 @@ class TestController {
     },
   })
   overrideBody(@TypedBody(CreateUserSchema) data: CreateUserDto) {
-    return data;
+    return data
   }
 }
 
@@ -93,20 +93,20 @@ class TestController {
 class TestModule {}
 
 describe('typed-body', () => {
-  let app: INestApplication;
+  let app: INestApplication
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [TestModule],
-    }).compile();
+    }).compile()
 
-    app = moduleRef.createNestApplication();
-    await app.init();
-  });
+    app = moduleRef.createNestApplication()
+    await app.init()
+  })
 
   afterAll(async () => {
-    await app.close();
-  });
+    await app.close()
+  })
 
   describe('pOST /typed-body', () => {
     it('should accept valid body with application/json content-type', async () => {
@@ -114,30 +114,30 @@ describe('typed-body', () => {
         name: 'John Doe',
         email: 'john@example.com',
         age: 25,
-      };
+      }
 
       const response = await request(app.getHttpServer())
         .post('/typed-body')
         .set('Content-Type', 'application/json')
         .send(validBody)
-        .expect(201);
+        .expect(201)
 
-      expect(response.body).toEqual(validBody);
-    });
+      expect(response.body).toEqual(validBody)
+    })
 
     it('should reject request with incorrect content-type', async () => {
       const validBody = {
         name: 'John Doe',
         email: 'john@example.com',
         age: 25,
-      };
+      }
 
       await request(app.getHttpServer())
         .post('/typed-body')
         .set('Content-Type', 'text/plain')
         .send(JSON.stringify(validBody))
-        .expect(400);
-    });
+        .expect(400)
+    })
 
     it('should reject invalid field', async () => {
       await request(app.getHttpServer())
@@ -148,8 +148,8 @@ describe('typed-body', () => {
           email: 'invalid-email',
           age: 25,
         })
-        .expect(400);
-    });
+        .expect(400)
+    })
 
     it('should reject missing required field', async () => {
       await request(app.getHttpServer())
@@ -160,8 +160,8 @@ describe('typed-body', () => {
           email: 'john@example.com',
           // missing age
         })
-        .expect(400);
-    });
+        .expect(400)
+    })
 
     it('should reject multiple invalid fields', async () => {
       await request(app.getHttpServer())
@@ -172,9 +172,9 @@ describe('typed-body', () => {
           email: 'invalid-email',
           age: 17, // too young
         })
-        .expect(400);
-    });
-  });
+        .expect(400)
+    })
+  })
 
   describe('pOST /typed-body/nested', () => {
     it('should accept valid nested body', async () => {
@@ -187,16 +187,16 @@ describe('typed-body', () => {
         metadata: {
           tags: ['tag1', 'tag2'],
         },
-      };
+      }
 
       const response = await request(app.getHttpServer())
         .post('/typed-body/nested')
         .set('Content-Type', 'application/json')
         .send(validBody)
-        .expect(201);
+        .expect(201)
 
-      expect(response.body).toEqual(validBody);
-    });
+      expect(response.body).toEqual(validBody)
+    })
 
     it('should reject invalid nested data', async () => {
       await request(app.getHttpServer())
@@ -212,38 +212,38 @@ describe('typed-body', () => {
             tags: ['tag1', 123], // invalid tag type
           },
         })
-        .expect(400);
-    });
-  });
+        .expect(400)
+    })
+  })
 
   describe('pOST /typed-body/form', () => {
     it('should accept valid form data with application/x-www-form-urlencoded content-type', async () => {
       const validBody = {
         file: 'test.txt',
         description: 'Test file',
-      };
+      }
 
       const response = await request(app.getHttpServer())
         .post('/typed-body/form')
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .send(validBody)
-        .expect(201);
+        .expect(201)
 
-      expect(response.body).toEqual(validBody);
-    });
+      expect(response.body).toEqual(validBody)
+    })
 
     it('should reject form data with incorrect content-type', async () => {
       const validBody = {
         file: 'test.txt',
         description: 'Test file',
-      };
+      }
 
       await request(app.getHttpServer())
         .post('/typed-body/form')
         .set('Content-Type', 'application/json')
         .send(validBody)
-        .expect(400);
-    });
+        .expect(400)
+    })
 
     it('should reject invalid form data', async () => {
       await request(app.getHttpServer())
@@ -252,9 +252,9 @@ describe('typed-body', () => {
         .send({
           description: 'Missing file field',
         })
-        .expect(400);
-    });
-  });
+        .expect(400)
+    })
+  })
 
   describe('pOST /typed-body/override', () => {
     it('should accept valid body with manual OpenAPI documentation', async () => {
@@ -262,15 +262,15 @@ describe('typed-body', () => {
         name: 'John Doe',
         email: 'john@example.com',
         age: 25,
-      };
+      }
 
       const response = await request(app.getHttpServer())
         .post('/typed-body/override')
         .set('Content-Type', 'application/json')
         .send(validBody)
-        .expect(201);
+        .expect(201)
 
-      expect(response.body).toEqual(validBody);
-    });
-  });
-});
+      expect(response.body).toEqual(validBody)
+    })
+  })
+})

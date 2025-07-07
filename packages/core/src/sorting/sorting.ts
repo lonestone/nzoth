@@ -1,22 +1,22 @@
-import { createLiteralUnion } from '../utils/schema';
-import { z } from 'zod';
+import { z } from 'zod'
+import { createLiteralUnion } from '../utils/schema'
 
-export type Sort<T extends readonly string[]> = {
-  property: T[number] & string;
-  direction: z.infer<typeof SortDirection>;
-};
+export interface Sort<T extends readonly string[]> {
+  property: T[number] & string
+  direction: z.infer<typeof SortDirection>
+}
 
 export const SortDirection = z.enum(['asc', 'desc'], {
   errorMap: () => ({
     message: 'Invalid sort direction. Use either "asc" or "desc"',
     code: 'invalid_direction',
   }),
-});
+})
 
 export function SortingToString<T extends readonly string[]>(
   sorting: Sort<T>[],
 ): string {
-  return sorting.map(el => `${el.property}:${el.direction}`).join(',');
+  return sorting.map(el => `${el.property}:${el.direction}`).join(',')
 }
 /**
  * This schema is used to validate a single sorting item represented as an object
@@ -33,7 +33,7 @@ export function SortingSchema<T extends readonly string[]>(enabledKeys: T) {
     .openapi({
       title: 'SortingSchema',
       description: 'Schema for sorting items',
-    });
+    })
 }
 
 /**
@@ -48,18 +48,18 @@ export function SortingStringSchema<T extends readonly string[]>(
   return z.string()
     // First validate basic format
     .regex(/^[^:]+(?::(asc|desc))?$/, 'Invalid sort format. Expected format: property[:asc|desc]')
-    .transform(val => {
-      const [property, direction = 'asc'] = val.split(':');
+    .transform((val) => {
+      const [property, direction = 'asc'] = val.split(':')
       return {
         property,
         direction: direction as z.infer<typeof SortDirection>,
-      };
+      }
     })
     .pipe(SortingSchema(enabledKeys))
     .openapi({
       title: 'SortingStringSchema',
       description: 'Schema for sorting items',
-    });
+    })
 }
 
 /**
@@ -79,10 +79,10 @@ export function createSortingQueryStringSchema<T extends readonly string[]>(
     .openapi({
       title: 'SortingQueryStringSchema',
       description: 'Schema for sorting items',
-    });
+    })
 }
 
 export type SortingItem<T extends readonly string[]> = z.infer<
   ReturnType<typeof SortingStringSchema<T>>
->;
-export type SortingQuery = z.infer<ReturnType<typeof createSortingQueryStringSchema>>;
+>
+export type SortingQuery = z.infer<ReturnType<typeof createSortingQueryStringSchema>>

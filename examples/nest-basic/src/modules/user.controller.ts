@@ -1,3 +1,10 @@
+import type {
+  UserCreate,
+  UserFiltering,
+  UserPagination,
+  UserSorting,
+  UserUpdate,
+} from './user.contract'
 import {
   FilteringParams,
   PaginationParams,
@@ -6,23 +13,18 @@ import {
   TypedController,
   TypedParam,
   TypedRoute,
-} from '@lonestone/nzoth/server';
+} from '@lonestone/nzoth/server'
+import { users } from 'src/modules/user.data'
+import { z } from 'zod'
 import {
-  UserCreate,
   UserCreateSchema,
-  UserFiltering,
   userFilteringSchema,
-  UserPagination,
   userPaginationSchema,
   UserSchema,
-  UserSorting,
   userSortingSchema,
   UsersSchema,
-  UserUpdate,
   UserUpdateSchema,
-} from './user.contract';
-import { users } from 'src/modules/user.data';
-import { z } from 'zod';
+} from './user.contract'
 
 @TypedController(
   '/:clientId/users',
@@ -38,49 +40,50 @@ export class UserController {
     @PaginationParams(userPaginationSchema) pagination?: UserPagination,
     @SortingParams(userSortingSchema) sort?: UserSorting,
   ) {
-    let filteredUsers = users.filter((user) => user.clientId === clientId);
+    let filteredUsers = users.filter(user => user.clientId === clientId)
 
     if (filters) {
       filteredUsers = filteredUsers.filter((user) => {
         return filters.every((filter) => {
-          return user[filter.property] === filter.value;
-        });
-      });
+          return user[filter.property] === filter.value
+        })
+      })
     }
 
     if (sort) {
       filteredUsers = filteredUsers.sort((a, b) => {
+        // eslint-disable-next-line no-unreachable-loop
         for (const sortItem of sort) {
-          const aValue = a[sortItem.property];
-          const bValue = b[sortItem.property];
+          const aValue = a[sortItem.property]
+          const bValue = b[sortItem.property]
           if (sortItem.direction === 'asc') {
             if (typeof aValue === 'string' && typeof bValue === 'string') {
-              return aValue.localeCompare(bValue);
+              return aValue.localeCompare(bValue)
             }
-            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
           }
           if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return bValue.localeCompare(aValue);
+            return bValue.localeCompare(aValue)
           }
-          return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+          return bValue < aValue ? -1 : bValue > aValue ? 1 : 0
         }
-        return 0;
-      });
+        return 0
+      })
     }
 
     if (pagination) {
       filteredUsers = filteredUsers.slice(
         pagination.offset,
         pagination.offset + pagination.pageSize,
-      );
+      )
     }
 
-    return filteredUsers;
+    return filteredUsers
   }
 
   @TypedRoute.Get(':id', UserSchema)
   async findOne(@TypedParam('id') id: string) {
-    return users.find((user) => user.id === id);
+    return users.find(user => user.id === id)
   }
 
   @TypedRoute.Post('', UserSchema)
@@ -94,7 +97,7 @@ export class UserController {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       clientId,
-    };
+    }
   }
 
   @TypedRoute.Put(':id', UserUpdateSchema)
@@ -111,11 +114,11 @@ export class UserController {
       clientId: '123e4567-e89b-12d3-a456-426614174000',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   @TypedRoute.Delete(':id')
   remove(@TypedParam('id', 'uuid') id: string) {
-    return id;
+    return id
   }
 }

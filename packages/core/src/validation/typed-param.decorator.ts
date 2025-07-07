@@ -1,13 +1,13 @@
-import type { ExecutionContext } from '@nestjs/common';
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { generateSchema } from '@anatine/zod-openapi';
-import { BadRequestException, createParamDecorator } from '@nestjs/common';
-import { ApiParam } from '@nestjs/swagger';
-import { z } from 'zod';
-import { ZodValidationException } from './validation.exception';
-import { getControllerParams } from './typed-controller.decorator';
+import type { ExecutionContext } from '@nestjs/common'
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { generateSchema } from '@anatine/zod-openapi'
+import { BadRequestException, createParamDecorator } from '@nestjs/common'
+import { ApiParam } from '@nestjs/swagger'
+import { z } from 'zod'
+import { getControllerParams } from './typed-controller.decorator'
+import { ZodValidationException } from './validation.exception'
 
-type SupportedParamTypes = string | number | boolean | null;
+type SupportedParamTypes = string | number | boolean | null
 
 /**
  * Converts a string parameter to the target type based on a Zod schema
@@ -26,7 +26,7 @@ const paramConverters = {
   uuid: z.string().uuid(),
   int: z.coerce.number().int(),
   positiveInt: z.coerce.number().int().positive(),
-} as const;
+} as const
 
 /**
  * Type-safe parameter decorator that validates and transforms URL parameters.
@@ -49,23 +49,24 @@ const paramConverters = {
 export function TypedParam(name: string, type?: keyof typeof paramConverters) {
   return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
     // Check if this parameter is defined at the controller level
-    const controllerParams = getControllerParams(target.constructor);
-    const controllerParam = controllerParams.find(param => param.name === name);
+    const controllerParams = getControllerParams(target.constructor)
+    const controllerParam = controllerParams.find(param => param.name === name)
 
     // We'll defer the schema lookup to runtime since controller parameters
     // might not be available when the decorator runs
-    let fallbackSchema: z.ZodType<any>;
-    let fallbackOpenApiSchema: SchemaObject;
+    let fallbackSchema: z.ZodType<any>
+    let fallbackOpenApiSchema: SchemaObject
 
     if (controllerParam) {
       // Use controller-level schema
-      fallbackSchema = controllerParam.schema;
-      fallbackOpenApiSchema = controllerParam.openApiSchema;
-    } else {
+      fallbackSchema = controllerParam.schema
+      fallbackOpenApiSchema = controllerParam.openApiSchema
+    }
+    else {
       // Use provided type or default to string
-      const paramType = type || 'string';
-      fallbackSchema = paramConverters[paramType];
-      fallbackOpenApiSchema = generateSchema(fallbackSchema) as SchemaObject;
+      const paramType = type || 'string'
+      fallbackSchema = paramConverters[paramType]
+      fallbackOpenApiSchema = generateSchema(fallbackSchema) as SchemaObject
     }
 
     // Create our base ApiParam decorator first
@@ -73,41 +74,43 @@ export function TypedParam(name: string, type?: keyof typeof paramConverters) {
       name,
       required: true,
       schema: fallbackOpenApiSchema,
-    });
+    })
 
     // Create parameter decorator for validation
     const paramDecorator = createParamDecorator(
       (_: unknown, ctx: ExecutionContext): SupportedParamTypes => {
-        const request = ctx.switchToHttp().getRequest();
-        const value = request.params[name];
+        const request = ctx.switchToHttp().getRequest()
+        const value = request.params[name]
 
         if (value === undefined) {
-          throw new BadRequestException(`Missing required parameter: ${name}`);
+          throw new BadRequestException(`Missing required parameter: ${name}`)
         }
 
         // Get the current controller parameters at runtime
-        const runtimeControllerParams = getControllerParams(target.constructor);
-        const runtimeControllerParam = runtimeControllerParams.find(param => param.name === name);
+        const runtimeControllerParams = getControllerParams(target.constructor)
+        const runtimeControllerParam = runtimeControllerParams.find(param => param.name === name)
 
         // Choose the schema to use for validation
-        let validationSchema: z.ZodType<any>;
+        let validationSchema: z.ZodType<any>
         if (runtimeControllerParam) {
-          validationSchema = runtimeControllerParam.schema;
-        } else {
-          validationSchema = fallbackSchema;
+          validationSchema = runtimeControllerParam.schema
+        }
+        else {
+          validationSchema = fallbackSchema
         }
 
         try {
-          const result = validationSchema.parse(value);
-          return result;
-        } catch (err) {
+          const result = validationSchema.parse(value)
+          return result
+        }
+        catch (err) {
           if (err instanceof z.ZodError) {
-            throw new ZodValidationException(err);
+            throw new ZodValidationException(err)
           }
-          throw err;
+          throw err
         }
       },
-    );
+    )
 
     // Apply the base decorator first (so manual decorators take precedence)
     baseDecorator(target.constructor, propertyKey, {
@@ -115,10 +118,10 @@ export function TypedParam(name: string, type?: keyof typeof paramConverters) {
       writable: true,
       enumerable: true,
       configurable: true,
-    });
+    })
 
-    return paramDecorator(name)(target, propertyKey, parameterIndex);
-  };
+    return paramDecorator(name)(target, propertyKey, parameterIndex)
+  }
 }
 
 /**
@@ -137,7 +140,7 @@ export function TypedParam(name: string, type?: keyof typeof paramConverters) {
  * ```
  */
 export function createTypedParam<T extends SupportedParamTypes>(schema: z.ZodType<T>) {
-  const openApiSchema = generateSchema(schema) as SchemaObject;
+  const openApiSchema = generateSchema(schema) as SchemaObject
 
   return (name: string) => {
     // Create our base ApiParam decorator first
@@ -145,26 +148,27 @@ export function createTypedParam<T extends SupportedParamTypes>(schema: z.ZodTyp
       name,
       required: true,
       schema: openApiSchema,
-    });
+    })
 
     // Create parameter decorator for validation
     const paramDecorator = createParamDecorator((_: unknown, ctx: ExecutionContext): T => {
-      const request = ctx.switchToHttp().getRequest();
-      const value = request.params[name];
+      const request = ctx.switchToHttp().getRequest()
+      const value = request.params[name]
 
       if (value === undefined) {
-        throw new BadRequestException(`Missing required parameter: ${name}`);
+        throw new BadRequestException(`Missing required parameter: ${name}`)
       }
 
       try {
-        return schema.parse(value);
-      } catch (err) {
-        if (err instanceof z.ZodError) {
-          throw new ZodValidationException(err);
-        }
-        throw err;
+        return schema.parse(value)
       }
-    });
+      catch (err) {
+        if (err instanceof z.ZodError) {
+          throw new ZodValidationException(err)
+        }
+        throw err
+      }
+    })
 
     // Return a decorator that applies our base ApiParam first (so manual decorators take precedence)
     return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
@@ -173,8 +177,8 @@ export function createTypedParam<T extends SupportedParamTypes>(schema: z.ZodTyp
         writable: true,
         enumerable: true,
         configurable: true,
-      });
-      return paramDecorator(name)(target, propertyKey, parameterIndex);
-    };
-  };
+      })
+      return paramDecorator(name)(target, propertyKey, parameterIndex)
+    }
+  }
 }
