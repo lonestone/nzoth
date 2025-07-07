@@ -28,6 +28,7 @@ export const UserSchema = z
     age: z.number().positive(),
     role: UserRole,
     tags: UserTags,
+    clientId: z.string().uuid(),
   })
   .openapi({
     title: 'User',
@@ -78,7 +79,7 @@ export const enabledUserFilteringKeys = [
   'email',
   'role',
   'tags',
-] as const
+] as const;
 
 export const userFilteringSchema = createFilterQueryStringSchema(
   enabledUserFilteringKeys,
@@ -89,13 +90,18 @@ export const userFilteringSchema = createFilterQueryStringSchema(
 
 export type UserFiltering = z.infer<typeof userFilteringSchema>;
 
-export const enabledUserSortingKeys = ['name', 'email', 'role', 'tags'] as const;
+export const enabledUserSortingKeys = [
+  'name',
+  'email',
+  'role',
+  'tags',
+] as const;
 
 export const userSortingSchema = createSortingQueryStringSchema(
   enabledUserSortingKeys,
 ).openapi({
   title: 'UserSorting',
-  enum: enabledUserSortingKeys.map(key => `${key}:asc,${key}:desc`),
+  enum: enabledUserSortingKeys.map((key) => `${key}:asc,${key}:desc`),
   example: 'name:asc,email:desc',
 });
 

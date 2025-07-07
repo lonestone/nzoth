@@ -28,6 +28,7 @@ export * from './pagination/pagination.js';
 export * from './sorting/sorting.decorator.js';
 export * from './sorting/sorting.js';
 export * from './validation/typed-body.decorator.js';
+export * from './validation/typed-controller.decorator.js';
 export * from './validation/typed-param.decorator.js';
 export * from './validation/typed-query.decorator.js';
 export * from './validation/typed-route.decorator.js';
