@@ -1,10 +1,3 @@
-import type {
-  UserCreate,
-  UserFiltering,
-  UserPagination,
-  UserSorting,
-  UserUpdate,
-} from './user.contract'
 import {
   FilteringParams,
   PaginationParams,
@@ -17,12 +10,17 @@ import {
 import { users } from 'src/modules/user.data'
 import { z } from 'zod'
 import {
+  UserCreate,
   UserCreateSchema,
+  UserFiltering,
   userFilteringSchema,
+  UserPagination,
   userPaginationSchema,
   UserSchema,
+  UserSorting,
   userSortingSchema,
   UsersSchema,
+  UserUpdate,
   UserUpdateSchema,
 } from './user.contract'
 
