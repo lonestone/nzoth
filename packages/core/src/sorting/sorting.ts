@@ -13,7 +13,7 @@ export const SortDirection = z.enum(['asc', 'desc'], {
   }),
 })
 
-export function SortingToString<T extends readonly string[]>(
+export function sortingToString<T extends readonly string[]>(
   sorting: Sort<T>[],
 ): string {
   return sorting.map(el => `${el.property}:${el.direction}`).join(',')

@@ -12,6 +12,7 @@
     // Ensure a correct output
     "baseUrl": ".",
     "rootDir": "src",
+    "outDir": "dist",
 
     // Ensure declarations and sourcemaps are generated
     "declaration": true,
@@ -35,5 +36,5 @@
     "noEmitOnError": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }
