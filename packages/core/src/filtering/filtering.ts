@@ -23,7 +23,7 @@ export interface Filtering {
 }
 
 // Helper function to convert filters to string (useful for serialization)
-export function FiltersToString(filters: Filtering[]): string {
+export function filtersToString(filters: Filtering[]): string {
   return filters
     .map((filter) => {
       if (filter.value === undefined) {
