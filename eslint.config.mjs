@@ -16,5 +16,12 @@ export default antfu(
       'ts/explicit-module-boundary-types': 'off',
       'ts/no-explicit-any': 'off',
     },
-  }
+  },
+  {
+    files: ['examples/nest-basic/**/*.ts', 'examples/nest-basic/**/*.json'],
+    rules: {
+      'ts/consistent-type-imports': 'off',
+      'node/prefer-global/process': ['error', 'always'],
+    },
+  },
 )
