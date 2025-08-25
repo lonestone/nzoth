@@ -14,13 +14,13 @@ export function createLiteralUnion<T extends readonly string[]>(keys: T, type: '
         ...z.ZodLiteral<T[number]>[],
       ],
     )
-    .catch((ctx) => {
-      throw new z.ZodError([
-        {
+    .superRefine((val, ctx) => {
+      if (!keys.includes(val)) {
+        ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: [0, 'property'],
-          message: `Invalid ${type} property '${ctx.input}'. Allowed properties are: ${keys.join(', ')}`,
-        },
-      ])
+          path: ['property'],
+          message: `Invalid ${type} property '${val}'. Allowed properties are: ${keys.join(', ')}`,
+        })
+      }
     })
 }

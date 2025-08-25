@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createLiteralUnion } from '../utils/schema'
+import { createLiteralUnion } from '../utils/schema.js'
 
 export enum FilterRule {
   EQUALS = 'eq',
@@ -47,7 +47,7 @@ export function FilteringSchema<T extends readonly string[]>(
     property: createLiteralUnion(availableFilteringKeys, 'filtering'),
     rule: z.nativeEnum(FilterRule),
     value: z.string().optional(),
-  }).openapi({
+  }).meta({
     title: 'FilteringSchema',
     description: 'Schema for a single filtering item',
   })
@@ -72,7 +72,7 @@ export function FilteringStringItemSchema<T extends readonly string[]>(
           message: `Invalid filter rule. Expected one of: ${Object.values(FilterRule).join(', ')}`,
           path: [],
         })
-        return z.NEVER
+        return
       }
 
       const parts = value.split(':')
@@ -80,12 +80,12 @@ export function FilteringStringItemSchema<T extends readonly string[]>(
       // For IS_NULL and IS_NOT_NULL, exactly 2 parts are required
       if ([FilterRule.IS_NULL, FilterRule.IS_NOT_NULL].includes(rule as FilterRule)) {
         if (parts.length !== 2) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'IS_NULL and IS_NOT_NULL rules should not have a value',
-            path: [],
-          })
-          return z.NEVER
+                  ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'IS_NULL and IS_NOT_NULL rules should not have a value',
+          path: [],
+        })
+        return
         }
       }
       // For other rules, exactly 3 parts are required
@@ -95,7 +95,7 @@ export function FilteringStringItemSchema<T extends readonly string[]>(
           message: 'Value is required for this filter rule',
           path: [],
         })
-        return z.NEVER
+        return
       }
     })
     .transform((value): Filtering => {
@@ -141,7 +141,7 @@ export function createFilterQueryStringSchema<T extends readonly string[]>(
       )
       .pipe(z.array(itemSchema))
       .optional()
-      .openapi({
+      .meta({
         title: 'FilterQueryStringSchema',
         description: `Filtering query string, in the format of "property:rule[:value];property:rule[:value];..."
     <br> Available rules: ${Object.values(FilterRule).join(', ')} 

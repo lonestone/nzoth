@@ -1,5 +1,5 @@
 import type { PaginationQuery } from './pagination'
-import { TypedQueryObject } from '../validation/typed-query.decorator'
+import { TypedQueryObject } from '../validation/typed-query.decorator.js'
 
 export interface PaginationOptions {
   defaultPageSize?: number

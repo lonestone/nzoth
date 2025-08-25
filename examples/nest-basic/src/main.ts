@@ -1,7 +1,7 @@
-import { addSchemasToSwagger } from '@lonestone/nzoth/server'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
+import { createOpenApiDocument } from '@lonestone/nzoth/server'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -14,9 +14,9 @@ async function bootstrap() {
     .addTag('@lonestone')
     .build()
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig)
+  const document = createOpenApiDocument(app, swaggerConfig)
 
-  addSchemasToSwagger(document)
+  // Log the document after adding schemas
 
   SwaggerModule.setup('docs', app, document, {
     jsonDocumentUrl: '/docs-json',

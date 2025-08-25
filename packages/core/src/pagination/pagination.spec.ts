@@ -81,12 +81,11 @@ describe('pagination', () => {
       expect(response.body.errors).toEqual([
         {
           path: ['pageSize'],
-          message: 'Number must be less than or equal to 100',
+          message: 'Too big: expected number to be <=100',
           maximum: 100,
           code: 'too_big',
-          exact: false,
           inclusive: true,
-          type: 'number',
+          origin: 'number',
         },
       ])
     })
@@ -124,12 +123,11 @@ describe('pagination', () => {
       expect(response.body.errors).toEqual([
         {
           path: ['pageSize'],
-          message: 'Number must be greater than or equal to 2',
+          message: 'Too small: expected number to be >=2',
           minimum: 2,
           code: 'too_small',
-          exact: false,
           inclusive: true,
-          type: 'number',
+          origin: 'number',
         },
       ])
     })
@@ -144,12 +142,11 @@ describe('pagination', () => {
       expect(response.body.errors).toEqual([
         {
           path: ['pageSize'],
-          message: 'Number must be less than or equal to 10',
+          message: 'Too big: expected number to be <=10',
           maximum: 10,
           code: 'too_big',
-          exact: false,
           inclusive: true,
-          type: 'number',
+          origin: 'number',
         },
       ])
     })
@@ -166,12 +163,11 @@ describe('pagination', () => {
       expect(response.body.errors).toEqual([
         {
           path: ['offset'],
-          message: 'Number must be greater than or equal to 0',
+          message: 'Too small: expected number to be >=0',
           minimum: 0,
           code: 'too_small',
-          exact: false,
           inclusive: true,
-          type: 'number',
+          origin: 'number',
         },
       ])
     })
@@ -186,17 +182,17 @@ describe('pagination', () => {
       expect(response.body.errors).toEqual([
         {
           path: ['offset'],
-          message: 'Expected number, received nan',
+          message: 'Invalid input: expected number, received NaN',
           code: 'invalid_type',
           expected: 'number',
-          received: 'nan',
+          received: 'NaN',
         },
         {
           path: ['pageSize'],
-          message: 'Expected number, received nan',
+          message: 'Invalid input: expected number, received NaN',
           code: 'invalid_type',
           expected: 'number',
-          received: 'nan',
+          received: 'NaN',
         },
       ])
     })

@@ -1,16 +1,15 @@
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import type { ZodType, ZodTypeDef } from 'zod'
-import { generateSchema } from '@anatine/zod-openapi'
+import type { ZodType } from 'zod'
 import { applyDecorators, Controller } from '@nestjs/common'
 import { ApiParam, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
+import { registerSchema, getOpenApiSchema } from '../openapi/openapi'
 import { PENDING_ROUTE_METADATA } from './typed-route.decorator'
-import { registerSchema } from './typed-schema'
 
 // Interface to define controller parameter metadata
 export interface ControllerParamMetadata {
   name: string
-  schema: ZodType<any, ZodTypeDef, any>
+  schema: ZodType<any, any>
   openApiSchema: SchemaObject
 }
 
@@ -20,9 +19,9 @@ export const CONTROLLER_PARAMS_STORAGE = new Map<string, ControllerParamMetadata
 /**
  * Generate OpenAPI schema with proper format information based on Zod schema
  */
-function generateOpenApiSchemaWithFormat(schema: ZodType<any, ZodTypeDef, any>): SchemaObject {
-  // Use the standard generateSchema function from @anatine/zod-openapi
-  const openApiSchema = generateSchema(schema) as SchemaObject
+function generateOpenApiSchemaWithFormat(schema: ZodType<any, any>): SchemaObject {
+  // Use the toOpenApi function
+  const openApiSchema = getOpenApiSchema(schema)
 
   // Fix the type format if it's an array with single element (common issue)
   if (openApiSchema.type && Array.isArray(openApiSchema.type) && openApiSchema.type.length === 1) {
@@ -57,9 +56,9 @@ export function extractParamNames(path: string): string[] {
  * @returns The extracted schema for the parameter, or z.string() as fallback
  */
 function extractParameterSchema(
-  paramsSchema: ZodType<any, ZodTypeDef, any> | undefined,
+  paramsSchema: ZodType<any, any> | undefined,
   paramName: string,
-): ZodType<any, ZodTypeDef, any> {
+): ZodType<any, any> {
   if (!paramsSchema) {
     return z.string()
   }
@@ -171,7 +170,7 @@ function applyControllerParametersToRoutes(
  */
 export function TypedController<T extends Record<string, any> = any>(
   path: string,
-  paramsSchema?: ZodType<T, ZodTypeDef, any>,
+  paramsSchema?: ZodType<T, any>,
   options?: {
     tags?: string[]
     description?: string

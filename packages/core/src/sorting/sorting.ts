@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createLiteralUnion } from '../utils/schema'
+import { createLiteralUnion } from '../utils/schema.js'
 
 export interface Sort<T extends readonly string[]> {
   property: T[number] & string
@@ -7,10 +7,12 @@ export interface Sort<T extends readonly string[]> {
 }
 
 export const SortDirection = z.enum(['asc', 'desc'], {
-  errorMap: () => ({
-    message: 'Invalid sort direction. Use either "asc" or "desc"',
-    code: 'invalid_direction',
-  }),
+  error: (issue) => {
+    return {
+      message: 'Invalid sort direction. Use either "asc" or "desc"',
+      code: 'invalid_direction',
+    }
+  },
 })
 
 export function SortingToString<T extends readonly string[]>(
@@ -30,7 +32,7 @@ export function SortingSchema<T extends readonly string[]>(enabledKeys: T) {
       property: createLiteralUnion(enabledKeys, 'sorting'),
       direction: SortDirection,
     })
-    .openapi({
+    .meta({
       title: 'SortingSchema',
       description: 'Schema for sorting items',
     })
@@ -56,7 +58,7 @@ export function SortingStringSchema<T extends readonly string[]>(
       }
     })
     .pipe(SortingSchema(enabledKeys))
-    .openapi({
+    .meta({
       title: 'SortingStringSchema',
       description: 'Schema for sorting items',
     })
@@ -76,7 +78,7 @@ export function createSortingQueryStringSchema<T extends readonly string[]>(
     .transform(val => val?.split(',').map(s => s.trim()))
     .pipe(z.array(SortingStringSchema(enabledKeys)))
     .optional()
-    .openapi({
+    .meta({
       title: 'SortingQueryStringSchema',
       description: 'Schema for sorting items',
     })

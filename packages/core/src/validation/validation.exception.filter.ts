@@ -15,7 +15,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      errors: exception.getZodError().errors,
+      errors: exception.getZodError().issues,
     })
   }
 }
@@ -32,7 +32,7 @@ export class ZodSerializationExceptionFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      errors: exception.getZodError().errors,
+      errors: exception.getZodError().issues,
     })
   }
 }

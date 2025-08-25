@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import 'zod-openapi'
 import { TypedBody, TypedFormBody } from './typed-body.decorator'
 
 // Test schemas
@@ -14,10 +15,6 @@ const CreateUserSchema = z
     email: z.string().email(),
     age: z.number().int().min(18),
   })
-  .openapi({
-    title: 'CreateUserSchema',
-    description: 'Schema for creating a user',
-  })
 
 type CreateUserDto = z.infer<typeof CreateUserSchema>
 
@@ -25,10 +22,6 @@ const FileUploadSchema = z
   .object({
     file: z.string(),
     description: z.string().optional(),
-  })
-  .openapi({
-    title: 'FileUploadSchema',
-    description: 'Schema for file upload',
   })
 
 type FileUploadDto = z.infer<typeof FileUploadSchema>
@@ -49,11 +42,7 @@ class TestController {
         metadata: z.object({
           tags: z.array(z.string()),
         }),
-      })
-        .openapi({
-          title: 'NestedUserSchema',
-          description: 'Schema for nested user data with metadata',
-        }),
+      }),
     )
     data: {
       user: CreateUserDto

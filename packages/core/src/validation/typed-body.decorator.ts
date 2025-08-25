@@ -1,11 +1,10 @@
 import type { ExecutionContext } from '@nestjs/common'
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import type { ZodType, ZodTypeDef } from 'zod'
-import { generateSchema } from '@anatine/zod-openapi'
+import type { ZodType } from 'zod'
 import { BadRequestException, createParamDecorator } from '@nestjs/common'
 import { ApiBody } from '@nestjs/swagger'
 import { z } from 'zod'
-import { registerSchema } from './typed-schema'
+import { autoRegisterSchema } from '../openapi/openapi.js'
 import { ZodValidationException } from './validation.exception'
 
 function isApplicationJson(contentType?: string): boolean {
@@ -30,7 +29,7 @@ function isFormUrlEncoded(contentType?: string): boolean {
 
 /**
  * Type-safe body decorator that validates request body using Zod schemas.
- * Automatically generates OpenAPI documentation from the schema.
+ * Automatically generates OpenAPI documentation from the schema using zod-openapi.
  * Expects application/json content type.
  *
  * @param schema - Zod schema for validation
@@ -38,9 +37,21 @@ function isFormUrlEncoded(contentType?: string): boolean {
  * @example
  * ```typescript
  * const CreateUserSchema = z.object({
- *   name: z.string().min(3),
- *   email: z.string().email(),
- *   role: z.enum(['admin', 'user']),
+ *   name: z.string().min(3).meta({
+ *     description: 'User name',
+ *     example: 'John Doe'
+ *   }),
+ *   email: z.string().email().meta({
+ *     description: 'User email',
+ *     example: 'john@example.com'
+ *   }),
+ *   role: z.enum(['admin', 'user']).meta({
+ *     description: 'User role',
+ *     example: 'user'
+ *   }),
+ * }).meta({
+ *   title: 'CreateUser',
+ *   description: 'User creation payload'
  * })
  *
  * @Post()
@@ -58,43 +69,14 @@ function isFormUrlEncoded(contentType?: string): boolean {
  * }
  * ```
  */
-export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
-  // Generate OpenAPI schema
-  const openApiSchema = generateSchema(schema) as SchemaObject
+export function TypedBody<T>(schema: ZodType<T, any, any>) {
+  // Generate OpenAPI schema and automatically register it
+  const openApiSchema = autoRegisterSchema(schema, 'Body')
 
-  // Format Name
-  const schemaName = openApiSchema.title || `Body_${Date.now()}`
-
-  // Register all nested schemas recursively
-  function registerNestedSchemas(schema: SchemaObject) {
-    if (schema.title) {
-      registerSchema(schema.title, schema, 'Body')
-    }
-
-    // Handle nested objects
-    if (schema.properties) {
-      Object.values(schema.properties).forEach((prop) => {
-        if (typeof prop === 'object' && !('$ref' in prop)) {
-          registerNestedSchemas(prop as SchemaObject)
-        }
-      })
-    }
-
-    // Handle arrays
-    if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-      registerNestedSchemas(schema.items as SchemaObject)
-    }
-  }
-
-  registerNestedSchemas(openApiSchema)
-
-  // Register the main schema and get the reference
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Body')
-
-  // Create our base ApiBody decorator first
+  // Create our base ApiBody decorator
   const baseDecorator = ApiBody({
     required: true,
-    schema: refSchema,
+    schema: openApiSchema,
     description: openApiSchema.description,
   })
 
@@ -132,7 +114,7 @@ export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
 
 /**
  * Type-safe form-urlencoded body decorator that validates request body using Zod schemas.
- * Automatically generates OpenAPI documentation from the schema.
+ * Automatically generates OpenAPI documentation from the schema using zod-openapi.
  * Expects application/x-www-form-urlencoded content type.
  *
  * @param schema - Zod schema for validation
@@ -140,9 +122,21 @@ export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
  * @example
  * ```typescript
  * const CreateArticleSchema = z.object({
- *   title: z.string().min(3),
- *   content: z.string(),
- *   tags: z.array(z.string()),
+ *   title: z.string().min(3).meta({
+ *     description: 'Article title',
+ *     example: 'My First Article'
+ *   }),
+ *   content: z.string().meta({
+ *     description: 'Article content',
+ *     example: 'This is the article content...'
+ *   }),
+ *   tags: z.array(z.string()).meta({
+ *     description: 'Article tags',
+ *     example: ['tech', 'programming']
+ *   }),
+ * }).meta({
+ *   title: 'CreateArticle',
+ *   description: 'Article creation payload'
  * })
  *
  * @Post()
@@ -160,43 +154,14 @@ export function TypedBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
  * }
  * ```
  */
-export function TypedFormBody<T>(schema: ZodType<T, ZodTypeDef, any>) {
-  // Generate OpenAPI schema
-  const openApiSchema = generateSchema(schema) as SchemaObject
+export function TypedFormBody<T>(schema: ZodType<T, any, any>) {
+  // Generate OpenAPI schema using zod-openapi
+  const openApiSchema = autoRegisterSchema(schema, 'Form')
 
-  // Format Name
-  const schemaName = openApiSchema.title || `FormBody_${Date.now()}`
-
-  // Register all nested schemas recursively
-  function registerNestedSchemas(schema: SchemaObject) {
-    if (schema.title) {
-      registerSchema(schema.title, schema, 'Body')
-    }
-
-    // Handle nested objects
-    if (schema.properties) {
-      Object.values(schema.properties).forEach((prop) => {
-        if (typeof prop === 'object' && !('$ref' in prop)) {
-          registerNestedSchemas(prop as SchemaObject)
-        }
-      })
-    }
-
-    // Handle arrays
-    if (schema.items && typeof schema.items === 'object' && !('$ref' in schema.items)) {
-      registerNestedSchemas(schema.items as SchemaObject)
-    }
-  }
-
-  registerNestedSchemas(openApiSchema)
-
-  // Register the main schema and get the reference
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Body')
-
-  // Create our base ApiBody decorator first
+  // Create our base ApiBody decorator
   const baseDecorator = ApiBody({
     required: true,
-    schema: refSchema,
+    schema: openApiSchema,
     description: openApiSchema.description,
     type: 'object',
   })

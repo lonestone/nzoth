@@ -7,7 +7,7 @@ export class ZodValidationException extends BadRequestException {
     super({
       statusCode: HttpStatus.BAD_REQUEST,
       message: 'Validation failed',
-      errors: error.errors,
+      errors: error.issues,
     })
   }
 
@@ -21,7 +21,7 @@ export class ZodSerializationException extends InternalServerErrorException {
     super({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Serialization failed',
-      errors: error.errors,
+      errors: error.issues,
     })
   }
 

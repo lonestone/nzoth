@@ -1,19 +1,19 @@
 import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common'
 import type { ApiResponseOptions } from '@nestjs/swagger'
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import type { ZodType, ZodTypeDef } from 'zod'
-import { generateSchema } from '@anatine/zod-openapi'
+import type { ZodType } from 'zod'
 import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { map } from 'rxjs/operators'
-import { registerSchema } from '../validation/typed-schema'
+import { getOpenApiSchema } from '../openapi/openapi.js'
+import { registerSchema } from '../openapi/openapi.js'
 import { ZodSerializationException } from './validation.exception'
 
 /**
  * Interceptor that validates response data against a Zod schema
  */
 class TypedRouteInterceptor implements NestInterceptor {
-  constructor(private readonly schema: ZodType<any, ZodTypeDef, any>) { }
+  constructor(private readonly schema: ZodType<any, any>) { }
 
   intercept(_: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
@@ -44,7 +44,7 @@ export const PENDING_ROUTE_METADATA = new Map<
     propertyKey: string | symbol
     descriptor: PropertyDescriptor
     path?: string | string[]
-    schema?: ZodType<any, ZodTypeDef, any>
+    schema?: ZodType<any, any>
     options?: ApiResponseOptions
     method: keyof typeof ROUTERS
   }>
@@ -91,7 +91,7 @@ export function applyControllerParamsToRoute(
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor,
   path?: string | string[],
-  schema?: ZodType<any, ZodTypeDef, any>,
+  schema?: ZodType<any, any>,
   options?: ApiResponseOptions,
   method?: keyof typeof ROUTERS,
 ) {
@@ -105,13 +105,16 @@ export function applyControllerParamsToRoute(
   }
 
   // Apply the full route with schema validation
-  const openApiSchema = generateSchema(schema) as SchemaObject
+  const openApiSchema = getOpenApiSchema(schema)
   const schemaName
     = openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`
 
-  function registerNestedSchemas(schema: SchemaObject) {
-    if (schema.title) {
-      registerSchema(schema.title, schema, 'Route')
+  function registerNestedSchemas(schema: SchemaObject, originalZodSchema?: ZodType<any>) {
+    // Check if the schema has an id in metadata and use it for registration
+    const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
+    
+    if (schemaId) {
+      registerSchema(schemaId, schema, 'Route')
     }
 
     if (schema.properties) {
@@ -127,7 +130,7 @@ export function applyControllerParamsToRoute(
     }
   }
 
-  registerNestedSchemas(openApiSchema)
+  registerNestedSchemas(openApiSchema, schema)
   const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
 
   const baseDecorator = ApiResponse({
@@ -153,7 +156,7 @@ export function applyControllerParamsToRoute(
 function createRouteDecorator(method: keyof typeof ROUTERS) {
   return function route<T>(
     path?: string | string[],
-    schema?: ZodType<T, ZodTypeDef, any>,
+    schema?: ZodType<T, any>,
     options?: ApiResponseOptions,
   ): MethodDecorator {
     return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
@@ -180,13 +183,16 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
       }
 
       // Generate schema and register all nested schemas
-      const openApiSchema = generateSchema(schema) as SchemaObject
+      const openApiSchema = getOpenApiSchema(schema)
       const schemaName
         = openApiSchema.title || `${method}_${(path || 'default').toString().replace(/[:/]/g, '_')}`
 
-      function registerNestedSchemas(schema: SchemaObject) {
-        if (schema.title) {
-          registerSchema(schema.title, schema, 'Route')
+      function registerNestedSchemas(schema: SchemaObject, originalZodSchema?: ZodType<any>) {
+        // Check if the schema has an id in metadata and use it for registration
+        const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
+        
+        if (schemaId) {
+          registerSchema(schemaId, schema, 'Route')
         }
 
         if (schema.properties) {
@@ -202,7 +208,7 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
         }
       }
 
-      registerNestedSchemas(openApiSchema)
+      registerNestedSchemas(openApiSchema, schema)
       const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
 
       const baseDecorator = ApiResponse({

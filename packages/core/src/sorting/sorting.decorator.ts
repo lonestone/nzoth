@@ -1,5 +1,5 @@
 import type { createSortingQueryStringSchema } from './sorting'
-import { TypedQuery } from '../validation/typed-query.decorator'
+import { TypedQuery } from '../validation/typed-query.decorator.js'
 
 /**
  * Decorator for parsing and validating sorting parameters from query string

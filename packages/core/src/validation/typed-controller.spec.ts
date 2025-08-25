@@ -41,7 +41,7 @@ const PostsSchema = z.array(PostSchema)
 @TypedController('authors/:authorId/posts', AuthorParamsSchema)
 class AuthorPostController {
   @TypedRoute.Get(undefined, PostsSchema)
-  findAll(@TypedParam('authorId') authorId: string) {
+  findAll(@TypedParam('authorId', z.string().uuid()) authorId: string) {
     return [
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -53,7 +53,7 @@ class AuthorPostController {
   }
 
   @TypedRoute.Get(':id', PostSchema)
-  findOne(@TypedParam('authorId') authorId: string, @TypedParam('id', 'uuid') id: string) {
+  findOne(@TypedParam('authorId', z.string().uuid()) authorId: string, @TypedParam('id', z.string().uuid()) id: string) {
     return {
       id,
       title: 'Test Post',
@@ -66,7 +66,7 @@ class AuthorPostController {
 @TypedController('categories/:categoryId/authors/:authorId/posts', PostParamsSchema)
 class CategoryAuthorPostController {
   @TypedRoute.Get(undefined, PostsSchema)
-  findAll(@TypedParam('categoryId') categoryId: string, @TypedParam('authorId') authorId: string) {
+  findAll(@TypedParam('categoryId', z.string().min(1)) categoryId: string, @TypedParam('authorId', z.string().uuid()) authorId: string) {
     return [
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -79,9 +79,9 @@ class CategoryAuthorPostController {
 
   @TypedRoute.Get(':id', PostSchema)
   findOne(
-    @TypedParam('categoryId') categoryId: string,
-    @TypedParam('authorId') authorId: string,
-    @TypedParam('id', 'uuid') id: string,
+    @TypedParam('categoryId', z.string().min(1)) categoryId: string,
+    @TypedParam('authorId', z.string().uuid()) authorId: string,
+    @TypedParam('id', z.string().uuid()) id: string,
   ) {
     return {
       id,
@@ -103,7 +103,7 @@ class SimpleController {
 @TypedController('users/:id')
 class UserController {
   @TypedRoute.Get(undefined, z.object({ id: z.string(), name: z.string() }))
-  findOne(@TypedParam('id') id: string) {
+  findOne(@TypedParam('id', z.string()) id: string) {
     return { id, name: 'Test User' }
   }
 }
@@ -111,7 +111,7 @@ class UserController {
 @TypedController('users/:userId/scores/:score', NumberParamsSchema)
 class NumericParamController {
   @TypedRoute.Get('', PostsSchema)
-  findAll(@TypedParam('userId') userId: number, @TypedParam('score') score: number) {
+  findAll(@TypedParam('userId', z.coerce.number().int().positive()) userId: number, @TypedParam('score', z.coerce.number()) score: number) {
     return [
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -125,9 +125,9 @@ class NumericParamController {
 
   @TypedRoute.Get(':id', PostSchema)
   findOne(
-    @TypedParam('userId') _: number,
-    @TypedParam('score') score: number,
-    @TypedParam('id', 'uuid') id: string,
+    @TypedParam('userId', z.coerce.number().int().positive()) _: number,
+    @TypedParam('score', z.coerce.number()) score: number,
+    @TypedParam('id', z.string().uuid()) id: string,
   ) {
     return {
       id,
@@ -151,7 +151,7 @@ class NoParamsController {
 @TypedController('users/:id/posts/:postId')
 class NoSchemaController {
   @TypedRoute.Get()
-  test(@TypedParam('id') id: string, @TypedParam('postId') postId: string) {
+  test(@TypedParam('id', z.string()) id: string, @TypedParam('postId', z.string()) postId: string) {
     return { id, postId, message: 'No schema test' }
   }
 }

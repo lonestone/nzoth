@@ -45,7 +45,7 @@ describe('filtering', () => {
     it('should return undefined when no filter parameter is provided', async () => {
       const response = await request(app.getHttpServer()).get('/filtering').expect(200)
 
-      expect(response.body.filter).toBeUndefined()
+      expect(response.body).toEqual({})
     })
 
     it('should accept valid single filter parameter', async () => {
@@ -90,6 +90,7 @@ describe('filtering', () => {
         .expect(400)
 
       expect(response.body.message).toContain('Validation failed')
+      expect(response.body.errors).toBeDefined()
     })
 
     it('should reject invalid filter rules', async () => {
@@ -99,6 +100,7 @@ describe('filtering', () => {
         .expect(400)
 
       expect(response.body.message).toContain('Validation failed')
+      expect(response.body.errors).toBeDefined()
     })
   })
 
@@ -180,8 +182,10 @@ describe('filtering', () => {
       const response = await request(app.getHttpServer())
         .get('/filtering')
         .query({ filter: 'email:eq' })
+        .expect(400)
 
       expect(response.body.message).toContain('Validation failed')
+      expect(response.body.errors).toBeDefined()
     })
   })
 })

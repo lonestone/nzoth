@@ -2,44 +2,39 @@ import {
   createFilterQueryStringSchema,
   createPaginationQuerySchema,
   createSortingQueryStringSchema,
-  registerSchema,
-  toOpenApi,
+  paginatedSchema,
 } from '@lonestone/nzoth/server'
 import { z } from 'zod'
+import 'zod-openapi'
 
-// With openapi support to edit role
-export const UserRole = z.enum(['admin', 'user']).openapi({
+// With metadata support to edit role
+export const UserRole = z.enum(['admin', 'user']).meta({
   title: 'UserRole',
   description: 'User role',
-  example: 'admin',
 })
 
-// Force register schema on swagger
-registerSchema('UserRole', toOpenApi(UserRole))
-
 // Without openapi
-export const UserTags = z.array(z.string())
+export const UserTags = z.array(z.enum(['tag1', 'tag2', 'tag3']))
 
 export const UserSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     name: z.string().min(2),
-    email: z.string().email(),
+    email: z.email(),
     age: z.number().positive(),
     role: UserRole,
     tags: UserTags,
-    clientId: z.string().uuid(),
-  })
-  .openapi({
+    clientId: z.uuid(),
+  }).meta({
     title: 'User',
     description: 'User schema',
   })
 
 export type User = z.infer<typeof UserSchema>
 
-export const UsersSchema = z.array(UserSchema.omit({ id: true })).openapi({
-  title: 'Users',
-  description: 'Users schema',
+export const UsersSchema = paginatedSchema(UserSchema.omit({ id: true })).meta({
+  title: 'Users paginated',
+  description: 'Users paginated schema',
 })
 
 export type Users = z.infer<typeof UsersSchema>
@@ -47,12 +42,12 @@ export type Users = z.infer<typeof UsersSchema>
 export const UserCreateSchema = z
   .object({
     name: z.string().min(2),
-    email: z.string().email(),
+    email: z.email(),
     age: z.number().positive(),
     role: UserRole,
     tags: UserTags,
   })
-  .openapi({
+  .meta({
     title: 'UserCreate',
     description: 'User create schema',
   })
@@ -62,12 +57,12 @@ export type UserCreate = z.infer<typeof UserCreateSchema>
 export const UserUpdateSchema = z
   .object({
     name: z.string().min(2),
-    email: z.string().email(),
+    email: z.email(),
     age: z.number().positive(),
     role: UserRole,
     tags: UserTags,
   })
-  .openapi({
+  .meta({
     title: 'UserUpdate',
     description: 'User update schema',
   })
@@ -79,14 +74,13 @@ export const enabledUserFilteringKeys = [
   'email',
   'role',
   'tags',
+  'clientId',
+  'active',
 ] as const
 
-export const userFilteringSchema = createFilterQueryStringSchema(
-  enabledUserFilteringKeys,
-).openapi({
-  title: 'UserFiltering',
-  description: 'User filtering schema',
-})
+// Create a simplified filtering schema compatible with zod-openapi
+// This validates the format but doesn't transform to objects
+export const userFilteringSchema = createFilterQueryStringSchema(enabledUserFilteringKeys)
 
 export type UserFiltering = z.infer<typeof userFilteringSchema>
 
@@ -95,25 +89,21 @@ export const enabledUserSortingKeys = [
   'email',
   'role',
   'tags',
+  'createdAt',
+  'updatedAt',
 ] as const
 
-export const userSortingSchema = createSortingQueryStringSchema(
-  enabledUserSortingKeys,
-).openapi({
-  title: 'UserSorting',
-  enum: enabledUserSortingKeys.map(key => `${key}:asc,${key}:desc`),
-  example: 'name:asc,email:desc',
-})
+// Create a simplified sorting schema compatible with zod-openapi
+// This validates the format but doesn't transform to objects
+export const userSortingSchema = createSortingQueryStringSchema(enabledUserSortingKeys)
 
 export type UserSorting = z.infer<typeof userSortingSchema>
 
+// Use the proper pagination schema with zod-openapi
 export const userPaginationSchema = createPaginationQuerySchema({
   defaultPageSize: 10,
-  maxPageSize: 100,
-  minPageSize: 1,
-}).openapi({
-  title: 'UserPagination',
-  description: 'User pagination schema',
+  maxPageSize: 50,
+  minPageSize: 1
 })
 
 export type UserPagination = z.infer<typeof userPaginationSchema>

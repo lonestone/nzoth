@@ -57,7 +57,7 @@ pnpm add @lonestone/nzoth
 
 ## Warning
 
-⚠️ **Module Augmentation Warning**: This package augments the Zod module by adding a `.openapi()` method to all Zod types. This is a global modification that affects all Zod instances in your application. This is done to provide a seamless integration with OpenAPI documentation generation [see here](./packages/core/src/server.ts).
+⚠️ **Module Augmentation Warning**: This package augments the Zod module by adding a `.meta()` method to all Zod types. This is a global modification that affects all Zod instances in your application. This is done to provide a seamless integration with OpenAPI documentation generation [see here](./packages/core/src/server.ts).
 
 ## Schema Definition
 
@@ -65,7 +65,7 @@ First, define your schemas using `z` (which adds OpenAPI metadata support to Zod
 
 ```typescript
 // Define an enum with OpenAPI metadata
-export const UserRole = z.enum(['admin', 'user']).openapi({
+export const UserRole = z.enum(['admin', 'user']).meta({
   title: 'UserRole',
   description: 'User role',
   example: 'admin',
@@ -81,18 +81,18 @@ export const UserSchema = z
     role: UserRole,
     tags: z.array(z.string()),
   })
-  .openapi({
+  .meta({
     title: 'User',
     description: 'User schema',
   });
 
 // Create derived schemas
-export const UserCreateSchema = z.openapi(UserSchema.omit({ id: true }), {
+export const UserCreateSchema = z.meta(UserSchema.omit({ id: true }), {
   title: 'UserCreate',
   description: 'User create schema',
 });
 
-export const UserUpdateSchema = z.openapi(UserSchema.omit({ id: true }), {
+export const UserUpdateSchema = z.meta(UserSchema.omit({ id: true }), {
   title: 'UserUpdate',
   description: 'User update schema',
 });

@@ -1,4 +1,4 @@
-import type { ZodType, ZodTypeDef } from 'zod'
+import type { ZodType } from 'zod'
 import { z } from 'zod'
 
 export const PaginationMetaSchema = z.object({
@@ -8,7 +8,7 @@ export const PaginationMetaSchema = z.object({
   hasMore: z.boolean(),
 })
 
-export function paginatedSchema<T>(schema: ZodType<T, ZodTypeDef, any>) {
+export function paginatedSchema<T>(schema: ZodType<T, any>) {
   return z.object({
     data: z.array(schema),
     meta: PaginationMetaSchema,
@@ -49,7 +49,7 @@ export function createPaginationQuerySchema(options?: {
         .max(maxPageSize)
         .default(defaultPageSize)
         .describe('Number of items to return'),
-    }).openapi({
+    }).meta({
       title: 'PaginationQuerySchema',
       description: 'Schema for pagination query',
     }),

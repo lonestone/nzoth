@@ -14,12 +14,12 @@ const UserSchema = z
     email: z.string().email(),
     password: z.string(),
   })
-  .openapi({
+  .meta({
     title: 'UserSchema',
     description: 'Complete user schema with sensitive data',
   })
 
-const PublicUserSchema = UserSchema.omit({ password: true }).openapi({
+const PublicUserSchema = UserSchema.omit({ password: true }).meta({
   title: 'PublicUserSchema',
   description: 'Public user schema without sensitive data',
 })
@@ -55,7 +55,7 @@ class TestController {
 
   @TypedRoute.Get(
     'array',
-    z.array(PublicUserSchema).openapi({
+    z.array(PublicUserSchema).meta({
       title: 'PublicUserArraySchema',
       description: 'Array of public users',
     }),

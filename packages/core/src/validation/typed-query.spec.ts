@@ -13,7 +13,7 @@ const SearchQuerySchema
     page: z.coerce.number().int().positive().optional(),
     tags: z.array(z.string()).optional(),
   })
-    .openapi({
+    .meta({
       title: 'SearchQuerySchema',
       description: 'Schema for search query parameters',
     })
@@ -21,7 +21,7 @@ const SearchQuerySchema
 type SearchQuery = z.infer<typeof SearchQuerySchema>
 
 // Custom query parameter validator
-const CustomQuerySchema = z.string().min(3).max(10).openapi({
+const CustomQuerySchema = z.string().min(3).max(10).meta({
   title: 'CustomQuerySchema',
   description: 'Schema for custom query parameter',
 })

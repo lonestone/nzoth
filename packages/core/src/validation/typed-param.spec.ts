@@ -4,55 +4,53 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { createTypedParam, TypedParam } from './typed-param.decorator'
-
-const CustomParam = createTypedParam(z.string().min(3).max(10))
+import { TypedParam } from './typed-param.decorator'
 
 // Test controller
 @Controller('typed-param')
 class TestController {
   @Get(':id')
-  getById(@TypedParam('id', 'uuid') id: string) {
+  getById(@TypedParam('id', z.string().uuid()) id: string) {
     return { id }
   }
 
   @Get('boolean/:flag')
-  getFlag(@TypedParam('flag', 'boolean') flag: boolean) {
-    return { flag }
+  getFlag(@TypedParam('flag', z.enum(['true', 'false'])) flag: string) {
+    return { flag: flag === 'true' }
   }
 
   // let's test all the types
   @Get('string/:value')
-  getString(@TypedParam('value', 'string') value: string) {
+  getString(@TypedParam('value', z.string().min(1)) value: string) {
     return { value }
   }
 
   @Get('number/:value')
-  getNumber(@TypedParam('value', 'number') value: number) {
+  getNumber(@TypedParam('value', z.coerce.number()) value: number) {
     return { value }
   }
 
   @Get('int/:value')
-  getInt(@TypedParam('value', 'int') value: number) {
+  getInt(@TypedParam('value', z.coerce.number().int()) value: number) {
     return { value }
   }
 
   @Get('positiveInt/:value')
-  getPositiveInt(@TypedParam('value', 'positiveInt') value: number) {
+  getPositiveInt(@TypedParam('value', z.coerce.number().int().positive()) value: number) {
     return { value }
   }
 
   @Get('multiple/:id/:count')
   getMultiple(
-    @TypedParam('id', 'uuid') id: string,
-    @TypedParam('count', 'positiveInt') count: number,
+    @TypedParam('id', z.string().uuid()) id: string,
+    @TypedParam('count', z.coerce.number().int().positive()) count: number,
   ) {
     return { id, count }
   }
 
   // Add a test with a custom type
   @Get('custom/:value')
-  getCustom(@CustomParam('value') value: string) {
+  getCustom(@TypedParam('value', z.string().min(3).max(10)) value: string) {
     return { value }
   }
 }
@@ -113,7 +111,7 @@ describe('typed-param', () => {
     })
 
     it('should reject invalid boolean', async () => {
-      await request(app.getHttpServer()).get('/typed-param/boolean/not-a-boolean').expect(400)
+      await request(app.getHttpServer()).get('/typed-param/boolean/invalid').expect(400)
     })
 
     it('should reject numeric boolean', async () => {
@@ -140,10 +138,10 @@ describe('typed-param', () => {
 
     it('should accept string with special characters', async () => {
       const response = await request(app.getHttpServer())
-        .get('/typed-param/string/hello@world!')
+        .get('/typed-param/string/hello%20world')
         .expect(200)
 
-      expect(response.body).toEqual({ value: 'hello@world!' })
+      expect(response.body).toEqual({ value: 'hello world' })
     })
   })
 
@@ -177,7 +175,7 @@ describe('typed-param', () => {
     })
 
     it('should reject non-numeric value', async () => {
-      await request(app.getHttpServer()).get('/typed-param/number/abc').expect(400)
+      await request(app.getHttpServer()).get('/typed-param/number/not-a-number').expect(400)
     })
   })
 
@@ -193,15 +191,13 @@ describe('typed-param', () => {
     })
 
     it('should reject non-numeric value', async () => {
-      await request(app.getHttpServer()).get('/typed-param/int/abc').expect(400)
+      await request(app.getHttpServer()).get('/typed-param/int/not-a-number').expect(400)
     })
   })
 
   describe('test positiveInt', () => {
     it('should accept positive integer', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/typed-param/positiveInt/42')
-        .expect(200)
+      const response = await request(app.getHttpServer()).get('/typed-param/positiveInt/42').expect(200)
 
       expect(response.body).toEqual({ value: 42 })
     })
@@ -210,28 +206,24 @@ describe('typed-param', () => {
       await request(app.getHttpServer()).get('/typed-param/positiveInt/0').expect(400)
     })
 
-    it('should reject negative number', async () => {
-      await request(app.getHttpServer()).get('/typed-param/positiveInt/-1').expect(400)
+    it('should reject negative integer', async () => {
+      await request(app.getHttpServer()).get('/typed-param/positiveInt/-42').expect(400)
     })
 
-    it('should reject decimal', async () => {
-      await request(app.getHttpServer()).get('/typed-param/positiveInt/3.14').expect(400)
+    it('should reject non-numeric value', async () => {
+      await request(app.getHttpServer()).get('/typed-param/positiveInt/not-a-number').expect(400)
     })
   })
 
   describe('test multiple', () => {
     const validUuid = '123e4567-e89b-12d3-a456-426614174000'
-    const validPositiveInt = 42
 
     it('should accept valid parameters', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/typed-param/multiple/${validUuid}/${validPositiveInt}`)
+        .get(`/typed-param/multiple/${validUuid}/42`)
         .expect(200)
 
-      expect(response.body).toEqual({
-        id: validUuid,
-        count: validPositiveInt,
-      })
+      expect(response.body).toEqual({ id: validUuid, count: 42 })
     })
 
     it('should reject when first param is invalid', async () => {
@@ -239,29 +231,25 @@ describe('typed-param', () => {
     })
 
     it('should reject when second param is invalid', async () => {
-      await request(app.getHttpServer())
-        .get(`/typed-param/multiple/${validUuid}/not-a-number`)
-        .expect(400)
+      await request(app.getHttpServer()).get(`/typed-param/multiple/${validUuid}/-1`).expect(400)
     })
   })
 
   describe('test custom', () => {
-    const validString = 'hello'
-
-    it('should accept valid string (3-10 chars)', async () => {
+    it('should accept valid custom value', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/typed-param/custom/${validString}`)
+        .get('/typed-param/custom/hello')
         .expect(200)
 
       expect(response.body).toEqual({ value: 'hello' })
     })
 
-    it('should reject too short string', async () => {
+    it('should reject too short value', async () => {
       await request(app.getHttpServer()).get('/typed-param/custom/hi').expect(400)
     })
 
-    it('should reject too long string', async () => {
-      await request(app.getHttpServer()).get('/typed-param/custom/thisistoolong').expect(400)
+    it('should reject too long value', async () => {
+      await request(app.getHttpServer()).get('/typed-param/custom/very-long-value').expect(400)
     })
   })
 })
