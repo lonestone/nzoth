@@ -4,29 +4,34 @@ import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec
 import type { ZodType } from 'zod'
 import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
-import { map } from 'rxjs/operators'
 import { getOpenApiSchema } from '../openapi/openapi.js'
 import { registerSchema } from '../openapi/openapi.js'
 import { ZodSerializationException } from './validation.exception'
+import { Observable } from 'rxjs'
 
 /**
  * Interceptor that validates response data against a Zod schema
  */
 class TypedRouteInterceptor implements NestInterceptor {
-  constructor(private readonly schema: ZodType<any, any>) { }
-
-  intercept(_: ExecutionContext, next: CallHandler) {
-    return next.handle().pipe(
-      map((value) => {
-        const result = this.schema.safeParse(value)
-        if (!result.success) {
-          throw new ZodSerializationException(result.error)
-        }
-        return result.data
-      }),
-    )
+    constructor(private readonly schema: ZodType<any, any>) { }
+  
+    intercept(_: ExecutionContext, next: CallHandler) {
+      return new Observable(observer => {
+        next.handle().subscribe({
+          next: value => {
+            const result = this.schema.safeParse(value);
+            if (!result.success) {
+              observer.error(new ZodSerializationException(result.error));
+            } else {
+              observer.next(result.data);
+            }
+          },
+          error: err => observer.error(err),
+          complete: () => observer.complete(),
+        });
+      });
+    }
   }
-}
 
 const ROUTERS = {
   Get,
