@@ -58,6 +58,8 @@ export const PENDING_ROUTE_METADATA = new Map<
 /**
  * Apply controller parameters to a route after controller is processed
  *
+ * @see https://lonestone.github.io/nzoth/core/validation/
+ *
  * @example
  * ```typescript
  * const UserSchema = z.object({

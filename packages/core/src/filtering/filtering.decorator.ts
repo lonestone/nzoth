@@ -5,6 +5,7 @@ import { TypedQuery } from '../validation/typed-query.decorator.js'
  * Decorator for parsing and validating filtering parameters from query string
  *
  * @param filteringSchema Schema created by createFilterQuerySchema
+ * @see https://lonestone.github.io/nzoth/core/filtering/
  *
  * @example
  * ```typescript

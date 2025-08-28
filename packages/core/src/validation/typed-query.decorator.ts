@@ -31,6 +31,7 @@ function createQuerySchema<T, U extends z.ZodType<T, any>>(
  * @param options - Configuration options
  * @param options.array - Whether to wrap schema in array
  * @param options.optional - Whether to make schema optional
+ * @see https://lonestone.github.io/nzoth/core/validation/
  * @example
  * ```typescript
  * @Get()

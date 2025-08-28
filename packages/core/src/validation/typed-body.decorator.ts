@@ -33,6 +33,7 @@ function isFormUrlEncoded(contentType?: string): boolean {
  * Expects application/json content type.
  *
  * @param schema - Zod schema for validation
+ * @see https://lonestone.github.io/nzoth/core/validation/
  *
  * @example
  * ```typescript

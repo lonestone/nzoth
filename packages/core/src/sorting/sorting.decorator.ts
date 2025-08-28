@@ -5,6 +5,7 @@ import { TypedQuery } from '../validation/typed-query.decorator.js'
  * Decorator for parsing and validating sorting parameters from query string
  *
  * @param schema Schema created by createSortQuerySchema
+ * @see https://lonestone.github.io/nzoth/core/sorting/
  *
  * @example
  * ```typescript

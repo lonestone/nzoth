@@ -10,6 +10,8 @@ type SupportedParamTypes = string | number | boolean | null
 /**
  * Converts a string parameter to the target type based on a Zod schema
  *
+ * @see https://lonestone.github.io/nzoth/core/validation/
+ *
  * @example
  * ```typescript
  * const uuidSchema = z.string().uuid().meta({

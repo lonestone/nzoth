@@ -11,6 +11,7 @@ export interface PaginationOptions {
  * Decorator for parsing and validating pagination parameters from query string
  *
  * @param schema Schema created by createPaginationQuerySchema
+ * @see https://lonestone.github.io/nzoth/core/pagination/
  *
  * @example
  * ```typescript

@@ -32,6 +32,8 @@ const OPENAPI_CACHE = new WeakMap<ZodType<any>, {
 
 /**
  * Converts a Zod schema to OpenAPI schema object and registers it in the schema storage
+ *
+ * @see https://lonestone.github.io/nzoth/core/openapi/
  */
 export function getOpenApiSchema<T>(schema: ZodType<T>): SchemaObject {
   const cached = OPENAPI_CACHE.get(schema)

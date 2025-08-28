@@ -167,6 +167,8 @@ function applyControllerParametersToRoutes(
 /**
  * Type-safe controller decorator that registers route parameters at the controller level
  * and automatically makes them available to nested routes.
+ *
+ * @see https://lonestone.github.io/nzoth/core/validation/
  */
 export function TypedController<T extends Record<string, any> = any>(
   path: string,
