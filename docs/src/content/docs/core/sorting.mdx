@@ -1,0 +1,22 @@
+---
+title: Sorting
+description: Parse and validate sorting parameters.
+---
+
+Use the helpers to parse a compact sort query string like `?sort=name:asc,createdAt:desc`.
+
+```ts
+import { TypedRoute, SortingParams, createSortingQueryStringSchema } from '@lonestone/nzoth/server'
+
+const allowed = ['name', 'email', 'createdAt'] as const
+const sortSchema = createSortingQueryStringSchema(allowed)
+
+@TypedRoute.Get()
+list(@SortingParams(sortSchema) sort?: z.infer<typeof sortSchema>) {
+  return this.service.list({ sort })
+}
+```
+
+Notes:
+- Default direction is `asc` when omitted (e.g., `name` → `name:asc`).
+- Invalid directions are rejected with a clear error message.

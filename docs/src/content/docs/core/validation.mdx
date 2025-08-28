@@ -1,0 +1,105 @@
+---
+title: Validation
+description: Type-safe validation with Zod and NZOTH decorators.
+---
+
+NZOTH provides decorators to validate inputs/outputs in NestJS using Zod, and to generate OpenAPI docs via `zod-openapi`.
+
+- `TypedController(path, paramsSchema?, options?)` — controller path params and tags
+- `TypedRoute.[Get|Post|Put|Patch|Delete](path?, responseSchema?, apiResponseOptions?)` — validate/serialize responses
+- `TypedBody(schema)` — validate JSON request bodies
+- `TypedFormBody(schema)` — validate `application/x-www-form-urlencoded` bodies
+- `TypedParam(key, schema)` — validate a single route param
+- `TypedQuery(key, schema, { array?, optional? })` — validate a single query param
+- `TypedQueryObject(schema)` — validate the full query object
+
+Use Zod v4 `.meta({ title, description, example })` to provide OpenAPI metadata.
+
+## Quick example
+
+```ts
+import { Controller } from '@nestjs/common'
+import {
+  TypedBody,
+  TypedController,
+  TypedParam,
+  TypedQueryObject,
+  TypedRoute,
+} from '@lonestone/nzoth/server'
+import { z } from 'zod'
+
+const User = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2),
+  email: z.string().email(),
+}).meta({ title: 'User', description: 'User entity' })
+
+const CreateUser = z.object({
+  name: z.string().min(2).meta({ description: 'User name', example: 'John' }),
+  email: z.string().email().meta({ description: 'User email', example: 'john@example.com' }),
+}).meta({ title: 'UserCreate' })
+
+const ListQuery = z.object({ q: z.string().min(2).optional() }).meta({ title: 'UserListQuery' })
+
+@TypedController('clients/:clientId/users', z.object({ clientId: z.string().uuid() }), { tags: ['User'] })
+export class UserController {
+  @TypedRoute.Get('', z.array(User).meta({ title: 'UserList' }))
+  list(
+    @TypedParam('clientId', z.string().uuid()) clientId: string,
+    @TypedQueryObject(ListQuery) _query: z.infer<typeof ListQuery>,
+  ) {
+    return []
+  }
+
+  @TypedRoute.Post('', User)
+  create(
+    @TypedParam('clientId', z.string().uuid()) clientId: string,
+    @TypedBody(CreateUser) dto: z.infer<typeof CreateUser>,
+  ) {
+    return { id: 'uuid', ...dto }
+  }
+}
+```
+
+## TypedBody (JSON)
+
+```ts
+@TypedRoute.Post('', User)
+create(@TypedBody(CreateUser) dto: z.infer<typeof CreateUser>) {
+  return { id: 'uuid', ...dto }
+}
+```
+
+Ensures `Content-Type: application/json`, validates with Zod, and registers an `ApiBody` schema.
+
+## TypedParam
+
+```ts
+@TypedRoute.Get(':id', User)
+findOne(@TypedParam('id', z.string().uuid()) id: string) { /* ... */ }
+```
+
+Validates a single route parameter (supports `z.coerce.number()`, custom transforms, etc.).
+
+## TypedQuery and TypedQueryObject
+
+```ts
+@TypedRoute.Get()
+search(
+  @TypedQuery('q', z.string().min(2), { optional: true }) q?: string,
+) { /* ... */ }
+
+@TypedRoute.Get()
+searchAdvanced(@TypedQueryObject(ListQuery) query: z.infer<typeof ListQuery>) { /* ... */ }
+```
+
+`TypedQuery` handles one parameter (with `{ array, optional }`), while `TypedQueryObject` validates the full query object and expands Swagger entries.
+
+## TypedRoute
+
+```ts
+@TypedRoute.Get(':id', User)
+findOne(@TypedParam('id', z.string().uuid()) id: string) { /* ... */ }
+```
+
+Validates and serializes responses at runtime; generates OpenAPI response schemas (uses `.meta({ title })` when present).

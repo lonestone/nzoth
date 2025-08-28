@@ -1,0 +1,42 @@
+---
+title: Filtering
+description: Validate and parse filtering query parameters.
+---
+
+Use the built-in helpers to validate filter expressions in a compact query-string format.
+
+## API
+
+- `createFilterQueryStringSchema(allowedKeys)` — builds a schema that parses a filter string like `name:eq:john;age:gt:25` into structured items.
+- `FilteringParams(schema)` — convenience decorator over `TypedQuery('filter', schema, { optional: true })`.
+- `FilterRule` — enum of supported rules: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `like`, `nlike`, `in`, `nin`, `isnull`, `isnotnull`.
+
+## Usage
+
+```ts
+import { TypedRoute, FilteringParams, createFilterQueryStringSchema } from '@lonestone/nzoth/server'
+import { z } from 'zod'
+
+const allowed = ['name', 'email', 'role', 'age'] as const
+const filterSchema = createFilterQueryStringSchema(allowed)
+
+@TypedRoute.Get()
+list(
+  @FilteringParams(filterSchema) filters?: z.infer<typeof filterSchema>,
+) {
+  // filters is undefined or an array of { property, rule, value? }
+  return this.service.list({ filters })
+}
+```
+
+Valid examples:
+
+- `?filter=name:eq:john`
+- `?filter=age:gt:25;name:like:john`
+- `?filter=active:isnull`
+
+Notes:
+
+- For `isnull` / `isnotnull`, no value is allowed (exactly two parts: `property:rule`).
+- For other rules, a value is required (three parts: `property:rule:value`).
+- The generated OpenAPI docs will include a description and example via `.meta()` on the schema.
