@@ -198,3 +198,10 @@ Supported filter rules:
 - `lte` - Less than or equals
 - `like` - Like (string pattern matching)
 - `nlike`
+
+Built on top of:
+
+- [NestJS](https://github.com/nestjs/nest)
+- [Zod](https://github.com/colinhacks/zod)
+- [zod-openapi](https://github.com/samchungy/zod-openapi)
+

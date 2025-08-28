@@ -1,0 +1,37 @@
+---
+title: OpenAPI
+description: Generate OpenAPI schemas from Zod.
+---
+
+With Zod v4 and `zod-openapi`, we no longer use `extendZodWithOpenApi`.
+Declare metadata using `.meta(...)` and NZOTH will generate and register schemas automatically.
+
+```ts
+import { z } from 'zod'
+
+export const User = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+}).meta({
+  title: 'User',
+  description: 'User entity',
+})
+
+export const UserList = z.array(User).meta({ title: 'UserList' })
+```
+
+These metadata fields (`title`, `description`, `example`, etc.) are propagated to the OpenAPI schema by NZOTH utilities.
+
+
+## OpenAPI specification and available fields
+
+For the full list of fields supported by OpenAPI schemas, see the official Schema Object section of the spec: [OpenAPI 3.1 — Components Object](https://spec.openapis.org/oas/v3.1.0.html#components-object).
+
+NZOTH, via `zod-openapi`, maps Zod types and `.meta()` to OpenAPI fields. Common `.meta()` properties you can set:
+
+- `title`: Component/schema name used in `#/components/schemas/*`
+- `description`: Human-readable description for the schema or property
+- `example`: Example value shown in generated docs and clients
+
+
+

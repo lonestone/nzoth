@@ -1,0 +1,67 @@
+---
+title: Getting Started
+description: Installation and first steps with NZOTH.
+---
+
+# Getting Started
+
+This section guides you through installing NZOTH, adding it to a NestJS project, and creating your first typed controller.
+
+## Installation
+
+Install the server dependencies:
+
+```bash
+pnpm add @lonestone/nzoth
+```
+
+## Quick example
+
+Declare a Zod schema and a controller using NZOTH’s typed decorators.
+
+Defines a Zod schema for a user object, specifying that a user has a UUID `id` and a valid email address.
+
+```ts
+// user.schema.ts
+import { z } from 'zod'
+
+export const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+}).meta({
+    title: "User",
+    description: "A basic user"
+})
+```
+
+Use the `TypedRoute` decorator with schema to add validation and type-safe
+
+```ts
+// user.controller.ts
+import { Controller } from '@nestjs/common'
+import { TypedRoute } from '@lonestone/nzoth/server'
+import { UserSchema } from './user.schema'
+
+@Controller('users')
+export class UserController {
+  @TypedRoute.Get({ response: UserSchema })
+  getMe() {
+    return { id: 'uuid', email: 'john@doe.tld' }
+  }
+}
+```
+
+Generate an OpenAPI document from your NestJS app and NZOTH decorators, enabling easy API documentation
+
+```ts
+// main.ts
+
+const document = createOpenApiDocument(app, swaggerConfig)
+
+SwaggerModule.setup('docs', app, document, {})
+```
+
+Move on to the "Core" pages to learn about validation, filtering, pagination, sorting, and OpenAPI export.
+
+
+

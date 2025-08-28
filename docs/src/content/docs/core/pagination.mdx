@@ -1,0 +1,49 @@
+---
+title: Pagination
+description: Add validated pagination to your endpoints.
+---
+
+Use the provided helpers to validate pagination query parameters and to type paginated responses.
+
+## API
+
+- `createPaginationQuerySchema(options?)` — builds a Zod schema for query params with fields: `offset` and `pageSize`.
+- `paginatedSchema(itemSchema)` — wraps your item schema into `{ data: T[]; meta: { offset; pageSize; itemCount; hasMore } }`.
+- `PaginationToString(pagination)` — serializes `{ offset, pageSize }` to `"offset:pageSize"`.
+
+Defaults (can be customized via options): `offset = 0`, `pageSize = 20`, min `1`, max `100`.
+
+## Usage
+
+```ts
+import {
+  TypedRoute,
+  TypedQueryObject,
+  createPaginationQuerySchema,
+  paginatedSchema,
+} from '@lonestone/nzoth/server'
+import { z } from 'zod'
+
+const User = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+}).meta({ title: 'User' })
+
+// Query schema with offset/pageSize
+const PaginationQuery = createPaginationQuerySchema({
+  defaultPageSize: 10,
+  maxPageSize: 50,
+  minPageSize: 1,
+})
+
+// Response schema with data[] and meta
+const UsersPage = paginatedSchema(User).meta({ title: 'UsersPage' })
+
+@TypedRoute.Get('', UsersPage)
+list(@TypedQueryObject(PaginationQuery) pagination: z.infer<typeof PaginationQuery>) {
+  // use pagination.offset and pagination.pageSize
+  return { data: [], meta: { offset: 0, pageSize: 10, itemCount: 0, hasMore: false } }
+}
+```
+
+OpenAPI: both `PaginationQuery` and `UsersPage` include titles/descriptions via `.meta()`, so components and parameter docs are generated automatically.
