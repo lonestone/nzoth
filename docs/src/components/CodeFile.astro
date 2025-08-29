@@ -1,0 +1,45 @@
+---
+import type { CodeLanguage } from 'astro'
+import { Code } from 'astro:components'
+
+interface Props {
+  file: string
+  lang?: CodeLanguage
+}
+
+const { file, lang = 'ts' } = Astro.props
+
+// Convertir le chemin relatif en chemin GitHub
+const getGitHubPath = (filePath: string) => {
+  // Enlever le préfixe '../examples/' et construire l'URL GitHub
+  const cleanPath = filePath.replace('../examples/', '')
+  return `https://raw.githubusercontent.com/lonestone/nzoth/main/examples/${cleanPath}`
+}
+
+// Récupérer le contenu depuis GitHub
+let content = ''
+let error = ''
+
+try {
+  const githubUrl = getGitHubPath(file)
+  const response = await fetch(githubUrl)
+  
+  if (response.ok) {
+    content = await response.text()
+  } else {
+    error = `Fichier non trouvé sur GitHub: ${file}`
+  }
+} catch (e) {
+  error = `Erreur lors de la récupération du fichier ${file}: ${e instanceof Error ? e.message : 'Erreur inconnue'}`
+}
+---
+
+{error ? (
+  <div class="error" style="background: #fee; border: 1px solid #fcc; padding: 1rem; border-radius: 4px; color: #c33;">
+    <p><strong>Erreur de fichier:</strong> {error}</p>
+    <p><em>Ce fichier n'a pas pu être récupéré depuis GitHub. Vérifiez le chemin et assurez-vous qu'il existe dans le repository.</em></p>
+  </div>
+) : (
+  <Code lang={lang} code={content} />
+)}
+

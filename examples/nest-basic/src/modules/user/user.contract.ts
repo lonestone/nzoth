@@ -1,3 +1,5 @@
+// modules/user.contract.ts
+
 import {
   createFilterQueryStringSchema,
   createPaginationQuerySchema,

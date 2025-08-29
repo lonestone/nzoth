@@ -1,3 +1,5 @@
+// modules/user.controller.ts
+
 import {
   TypedBody,
   TypedController,
@@ -6,7 +8,7 @@ import {
   TypedQueryObject,
   TypedRoute,
 } from '@lonestone/nzoth/server'
-import { users } from 'src/modules/user.data'
+import { users } from 'src/modules/user/user.data'
 import { z } from 'zod'
 import {
   UserCreate,

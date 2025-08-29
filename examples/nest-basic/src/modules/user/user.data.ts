@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { User } from 'src/modules/user.contract'
+import { User } from 'src/modules/user/user.contract'
 
 export const users: User[] = faker.helpers.multiple(
   () => ({

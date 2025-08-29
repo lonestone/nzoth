@@ -1,10 +1,16 @@
+// main.ts
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
-import { createOpenApiDocument } from '@lonestone/nzoth/server'
+import { createOpenApiDocument, ZodValidationExceptionFilter, ZodSerializationExceptionFilter} from '@lonestone/nzoth/server'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  app.useGlobalFilters(
+    new ZodValidationExceptionFilter(),
+    new ZodSerializationExceptionFilter()
+  )
 
   const swaggerConfig = new DocumentBuilder()
     .setOpenAPIVersion('3.1.0')
@@ -15,8 +21,6 @@ async function bootstrap() {
     .build()
 
   const document = createOpenApiDocument(app, swaggerConfig)
-
-  // Log the document after adding schemas
 
   SwaggerModule.setup('docs', app, document, {
     jsonDocumentUrl: '/docs-json',
