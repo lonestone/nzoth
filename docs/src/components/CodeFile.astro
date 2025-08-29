@@ -1,0 +1,34 @@
+---
+import type { CodeLanguage } from 'astro'
+import { Code} from 'astro:components'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+interface Props {
+  file: string
+  lang?: CodeLanguage
+}
+
+const { file, lang = 'ts' } = Astro.props
+
+// Construire le chemin vers le fichier
+const filePath = join(process.cwd(), file)
+
+let content = ''
+let error = ''
+
+try {
+  content = readFileSync(filePath, 'utf-8')
+} catch (e) {
+  error = `Erreur: Impossible de lire le fichier ${file}`
+}
+---
+
+{error ? (
+  <div class="error">
+    <p>{error}</p>
+  </div>
+) : (
+  <Code lang={lang} code={content} />
+)}
+
