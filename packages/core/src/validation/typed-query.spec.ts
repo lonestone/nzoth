@@ -34,13 +34,13 @@ class TestController {
   @Get('single')
   getSingle(
     @TypedQuery('q', z.string().min(2)) query: string,
-    @TypedQuery('page', z.coerce.number().int().positive(), { optional: true }) page?: number,
+    @TypedQuery('page', z.coerce.number().int().positive().optional()) page?: number,
   ) {
     return { query, page }
   }
 
   @Get('array')
-  getArray(@TypedQuery('tags', z.string(), { array: true }) tags: string[]) {
+  getArray(@TypedQuery('tags', z.string().array()) tags: string[]) {
     return { tags }
   }
 
@@ -91,6 +91,17 @@ describe('typed-query', () => {
         page: 42,
       })
     })
+
+    it('should accept valid query parameters string', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/typed-query/single?q=test&page=42')
+          .expect(200)
+  
+        expect(response.body).toEqual({
+          query: 'test',
+          page: 42,
+        })
+      })
 
     it('should accept query without optional param', async () => {
       const response = await request(app.getHttpServer())

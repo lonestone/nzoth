@@ -17,5 +17,5 @@ import { TypedQuery } from '../validation/typed-query.decorator.js'
  * ```
  */
 export function SortingParams(schema: ReturnType<typeof createSortingQueryStringSchema>) {
-  return TypedQuery('sort', schema, { optional: true })
+  return TypedQuery('sort', schema.optional())
 }

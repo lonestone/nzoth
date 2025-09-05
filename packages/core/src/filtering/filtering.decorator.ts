@@ -20,5 +20,5 @@ import { TypedQuery } from '../validation/typed-query.decorator.js'
  * ```
  */
 export function FilteringParams(filteringSchema: ReturnType<typeof createFilterQueryStringSchema>) {
-  return TypedQuery('filter', filteringSchema, { optional: true })
+  return TypedQuery('filter', filteringSchema.optional())
 }

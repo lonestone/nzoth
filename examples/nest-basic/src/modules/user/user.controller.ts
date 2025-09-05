@@ -41,9 +41,9 @@ export class UserController {
   @TypedRoute.Get('', UsersSchema)
   findAll(
     @TypedParam('clientId', z.string().uuid()) clientId: string,
-    @TypedQuery('filter', userFilteringSchema, { optional: true }) filters?: UserFiltering,
+    @TypedQuery('filter', userFilteringSchema.optional()) filters?: UserFiltering,
     @TypedQueryObject(userPaginationSchema) pagination?: UserPagination,
-    @TypedQuery('sort', userSortingSchema, { optional: true }) sort?: UserSorting,
+    @TypedQuery('sort', userSortingSchema.optional()) sort?: UserSorting,
   ) {
     let filteredUsers = users.filter(user => user.clientId === clientId)
 
