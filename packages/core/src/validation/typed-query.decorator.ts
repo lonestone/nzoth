@@ -8,19 +8,8 @@ import { ZodValidationException } from './validation.exception'
 
 function createQuerySchema<T, U extends z.ZodType<T, any>>(
   schema: U,
-  options: { array?: boolean, optional?: boolean } = {},
-): U | z.ZodArray<U> | z.ZodOptional<U | z.ZodArray<U>> {
-  let querySchema = schema
-
-  if (options.array) {
-    querySchema = z.array(schema) as any
-  }
-
-  if (options.optional) {
-    querySchema = z.optional(querySchema) as any
-  }
-
-  return querySchema
+): U {
+  return schema
 }
 
 /**
@@ -28,9 +17,6 @@ function createQuerySchema<T, U extends z.ZodType<T, any>>(
  *
  * @param key - Query parameter key
  * @param schema - Zod schema for validation
- * @param options - Configuration options
- * @param options.array - Whether to wrap schema in array
- * @param options.optional - Whether to make schema optional
  * @see https://lonestone.github.io/nzoth/core/validation/
  * @example
  * ```typescript
@@ -40,14 +26,14 @@ function createQuerySchema<T, U extends z.ZodType<T, any>>(
  *     description: 'Search query',
  *     example: 'typescript'
  *   })) query: string,
- *   @TypedQuery('tags', z.string().meta({
+ *   @TypedQuery('tags', z.array(z.string()).meta({
  *     description: 'Filter by tags',
- *     example: 'api'
- *   }), { array: true }) tags: string[],
- *   @TypedQuery('page', z.coerce.number().int().positive().meta({
+ *     example: ['api']
+ *   })) tags: string[],
+ *   @TypedQuery('page', z.coerce.number().int().positive().optional().meta({
  *     description: 'Page number',
  *     example: 1
- *   }), { optional: true }) page?: number,
+ *   })) page?: number,
  * ) {
  *   return this.service.search(query, tags, page)
  * }
@@ -56,15 +42,14 @@ function createQuerySchema<T, U extends z.ZodType<T, any>>(
 export function TypedQuery<T>(
   key: string,
   schema: ZodType<T, any>,
-  options: { array?: boolean, optional?: boolean } = {},
 ) {
-  const querySchema = createQuerySchema(schema, options)
+  const querySchema = createQuerySchema(schema)
   const openApiSchema = getOpenApiSchema(querySchema)
 
   // Create our base ApiQuery decorator
   const baseDecorator = ApiQuery({
     name: key,
-    required: !options.optional,
+    required: !schema.isOptional(),
     schema: openApiSchema,
     description: openApiSchema.description,
   })
@@ -74,9 +59,9 @@ export function TypedQuery<T>(
     const request = ctx.switchToHttp().getRequest()
     const value = request.query[key]
 
-    // Handle array conversion for single values
+    // Handle array conversion for single values when schema expects an array
     let processedValue = value
-    if (options.array && !Array.isArray(value) && value !== undefined) {
+    if (schema instanceof z.ZodArray && !Array.isArray(value) && value !== undefined) {
       processedValue = [value]
     }
 

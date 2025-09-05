@@ -3,6 +3,7 @@ import {
   TypedBody,
   TypedController,
   TypedParam,
+  TypedQuery,
   TypedRoute,
 } from '@lonestone/nzoth/server'
 import { z } from 'zod'
@@ -21,7 +22,9 @@ import {
 )
 export class PostController {
   @TypedRoute.Get('', PostsSchema)
-  findAll(): Posts {
+  findAll(
+    @TypedQuery('q', z.string().optional()) q: string,
+  ): Posts {
     let filteredPosts = [
       {
         id: '1',
