@@ -9,6 +9,16 @@ import {
 import { z } from 'zod'
 import 'zod-openapi'
 
+
+import { registerSchema } from "@lonestone/nzoth/server"
+
+const miscSchema = z.enum(['yes', 'no']).meta({
+    title: 'Misc',
+    description: 'Misc schema only for testing',
+})
+
+registerSchema(miscSchema)
+
 // With metadata support to edit role
 export const UserRole = z.enum(['admin', 'user']).meta({
   title: 'UserRole',
@@ -27,6 +37,7 @@ export const UserSchema = z
     role: UserRole,
     tags: UserTags,
     clientId: z.uuid(),
+    createdAt: z.date(),
   }).meta({
     title: 'User',
     description: 'User schema',
@@ -82,7 +93,11 @@ export const enabledUserFilteringKeys = [
 
 // Create a simplified filtering schema compatible with zod-openapi
 // This validates the format but doesn't transform to objects
-export const userFilteringSchema = createFilterQueryStringSchema(enabledUserFilteringKeys)
+export const userFilteringSchema = createFilterQueryStringSchema(enabledUserFilteringKeys).meta({
+  title: 'UserFiltering',
+  description: 'User filtering schema',
+
+})
 
 export type UserFiltering = z.infer<typeof userFilteringSchema>
 

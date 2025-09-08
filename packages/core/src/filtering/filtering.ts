@@ -147,6 +147,10 @@ export function createFilterQueryStringSchema<T extends readonly string[]>(
     <br> Available rules: ${Object.values(FilterRule).join(', ')} 
     <br> Available properties: ${availableFilteringKeys.join(', ')}`,
         example: 'name:eq:John;age:gt:30',
+        override: {
+            type: 'string',
+            format: 'filter',
+        },
       })
   )
 }

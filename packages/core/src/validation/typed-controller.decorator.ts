@@ -3,7 +3,7 @@ import type { ZodType } from 'zod'
 import { applyDecorators, Controller } from '@nestjs/common'
 import { ApiParam, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
-import { registerSchema, getOpenApiSchema } from '../openapi/openapi'
+import { registerSchemaRef, getOpenApiSchema } from '../openapi/openapi'
 import { PENDING_ROUTE_METADATA } from './typed-route.decorator'
 
 // Interface to define controller parameter metadata
@@ -192,7 +192,7 @@ export function TypedController<T extends Record<string, any> = any>(
 
       // Register the parameter schema
       const schemaName = `${target.name}_${paramName}`
-      registerSchema(schemaName, openApiSchema, 'Other')
+      registerSchemaRef(schemaName, openApiSchema, 'Other')
 
       controllerParams.push({
         name: paramName,

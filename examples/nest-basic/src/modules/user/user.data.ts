@@ -10,6 +10,7 @@ export const users: User[] = faker.helpers.multiple(
     role: faker.helpers.arrayElement(['admin', 'user']),
     tags: faker.helpers.arrayElements(['tag1', 'tag2', 'tag3']),
     clientId: faker.string.uuid(),
+    createdAt: faker.date.recent(),
   }),
   {
     count: 100,

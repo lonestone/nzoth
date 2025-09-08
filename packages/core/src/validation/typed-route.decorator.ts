@@ -5,7 +5,7 @@ import type { ZodType } from 'zod'
 import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { getOpenApiSchema } from '../openapi/openapi.js'
-import { registerSchema } from '../openapi/openapi.js'
+import { registerSchemaRef } from '../openapi/openapi.js'
 import { ZodSerializationException } from './validation.exception'
 import { Observable } from 'rxjs'
 
@@ -121,7 +121,7 @@ export function applyControllerParamsToRoute(
     const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
     
     if (schemaId) {
-      registerSchema(schemaId, schema, 'Route')
+      registerSchemaRef(schemaId, schema, 'Route')
     }
 
     if (schema.properties) {
@@ -138,7 +138,7 @@ export function applyControllerParamsToRoute(
   }
 
   registerNestedSchemas(openApiSchema, schema)
-  const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
+  const refSchema = registerSchemaRef(schemaName, openApiSchema, 'Route')
 
   const baseDecorator = ApiResponse({
     status: 200,
@@ -199,7 +199,7 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
         const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
         
         if (schemaId) {
-          registerSchema(schemaId, schema, 'Route')
+          registerSchemaRef(schemaId, schema, 'Route')
         }
 
         if (schema.properties) {
@@ -216,7 +216,7 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
       }
 
       registerNestedSchemas(openApiSchema, schema)
-      const refSchema = registerSchema(schemaName, openApiSchema, 'Route')
+      const refSchema = registerSchemaRef(schemaName, openApiSchema, 'Route')
 
       const baseDecorator = ApiResponse({
         status: 200,
