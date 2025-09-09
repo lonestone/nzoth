@@ -45,7 +45,7 @@ export function FilteringSchema<T extends readonly string[]>(
 ) {
   return z.object({
     property: createLiteralUnion(availableFilteringKeys, 'filtering'),
-    rule: z.nativeEnum(FilterRule),
+    rule: z.enum(FilterRule),
     value: z.string().optional(),
   }).meta({
     title: 'FilteringSchema',
