@@ -1,7 +1,7 @@
 {
     "name": "lonestone-nzoth",
     "description": "A collection of NestJS utilities for building RESTful APIs with support for filtering, pagination, sorting, type-safe request/response validation, and OpenAPI schema registration using Zod. Allows registering Zod schemas with OpenAPI metadata for automatic documentation generation.",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "private": true,
     "scripts": {
         "build": "pnpm -r build",
