@@ -81,6 +81,11 @@ export function createSortingQueryStringSchema<T extends readonly string[]>(
     .meta({
       title: 'SortingQueryStringSchema',
       description: 'Schema for sorting items',
+      example: 'name:asc,age:desc',
+      override: {
+        type: 'string',
+        format: 'sort',
+      },
     })
 }
 
