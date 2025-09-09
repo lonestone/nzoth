@@ -207,16 +207,14 @@ export function TypedController<T extends Record<string, any> = any>(
     // Process any pending routes for this controller
     applyControllerParametersToRoutes(target.name, controllerParams)
 
-    // Extract controller name from path for tags
-    const controllerName = path.split('/')[0] || target.name.replace('Controller', '')
+    // Use the controller class name without the 'Controller' suffix for tags (matching Nest default)
+    const className = target.name.replace(/Controller$/, '')
 
     // Create decorators to apply
     const decorators = [Controller(path)]
 
-    // Add API tags if specified or use default
-    if (options?.tags || controllerName) {
-      decorators.push(ApiTags(...(options?.tags || [controllerName])))
-    }
+    // Add API tags if specified or use the class name
+    decorators.push(ApiTags(...(options?.tags || [className])))
 
     // Apply all decorators
     applyDecorators(...decorators)(target)
