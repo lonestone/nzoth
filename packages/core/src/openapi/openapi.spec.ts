@@ -5,11 +5,12 @@ import { Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { 
   getOpenApiSchema, 
-  registerSchema,
+  registerSchemaRef,
   autoRegisterSchema,
   SCHEMA_STORAGE,
   GLOBAL_SCHEMA_REGISTRY,
   createOpenApiDocument,
+  registerSchema,
 } from './openapi'
 import { DocumentBuilder } from '@nestjs/swagger'
 import { TypedController } from '../validation/typed-controller.decorator'
@@ -150,7 +151,7 @@ describe('openapi', () => {
     })
   })
 
-  describe('registerSchema', () => {
+  describe('registerSchemaRef', () => {
     it('should register schema in storage and return reference', () => {
       const schema = {
         type: 'object',
@@ -161,7 +162,7 @@ describe('openapi', () => {
         required: ['name', 'age']
       } as any
 
-      const reference = registerSchema('User', schema, 'Body')
+      const reference = registerSchemaRef('User', schema, 'Body')
 
       expect(reference).toEqual({ $ref: '#/components/schemas/User' })
       expect(SCHEMA_STORAGE.Body.has('User')).toBe(true)
@@ -183,7 +184,7 @@ describe('openapi', () => {
         }
       } as any
 
-      registerSchema('User', schema, 'Body')
+      registerSchemaRef('User', schema, 'Body')
 
       expect(SCHEMA_STORAGE.Other.has('Address')).toBe(true)
       expect(GLOBAL_SCHEMA_REGISTRY.has('Address')).toBe(true)
@@ -194,7 +195,7 @@ describe('openapi', () => {
         type: 'string'
       } as any
 
-      registerSchema('SimpleString', schema)
+      registerSchemaRef('SimpleString', schema)
 
       expect(SCHEMA_STORAGE.Other.has('SimpleString')).toBe(true)
     })
@@ -324,6 +325,7 @@ describe('openapi', () => {
     })
 
     it('should handle empty storages without error', () => {
+      registerSchema(z.object({ id: z.number() }).meta({ title: 'User', description: 'User schema' }))
       const config = new DocumentBuilder()
         .setTitle('Test')
         .setVersion('1.0.0')
@@ -345,7 +347,7 @@ describe('openapi', () => {
       }).meta({ title: 'Address' })
 
       const UserSchema = z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         name: z.string(),
         address: AddressSchema,
       }).meta({ title: 'User' })

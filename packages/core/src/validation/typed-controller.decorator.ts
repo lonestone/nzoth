@@ -3,7 +3,7 @@ import type { ZodType } from 'zod'
 import { applyDecorators, Controller } from '@nestjs/common'
 import { ApiParam, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
-import { registerSchema, getOpenApiSchema } from '../openapi/openapi'
+import { registerSchemaRef, getOpenApiSchema } from '../openapi/openapi'
 import { PENDING_ROUTE_METADATA } from './typed-route.decorator'
 
 // Interface to define controller parameter metadata
@@ -192,7 +192,7 @@ export function TypedController<T extends Record<string, any> = any>(
 
       // Register the parameter schema
       const schemaName = `${target.name}_${paramName}`
-      registerSchema(schemaName, openApiSchema, 'Other')
+      registerSchemaRef(schemaName, openApiSchema, 'Other')
 
       controllerParams.push({
         name: paramName,
@@ -207,16 +207,14 @@ export function TypedController<T extends Record<string, any> = any>(
     // Process any pending routes for this controller
     applyControllerParametersToRoutes(target.name, controllerParams)
 
-    // Extract controller name from path for tags
-    const controllerName = path.split('/')[0] || target.name.replace('Controller', '')
+    // Use the controller class name without the 'Controller' suffix for tags (matching Nest default)
+    const className = target.name.replace(/Controller$/, '')
 
     // Create decorators to apply
     const decorators = [Controller(path)]
 
-    // Add API tags if specified or use default
-    if (options?.tags || controllerName) {
-      decorators.push(ApiTags(...(options?.tags || [controllerName])))
-    }
+    // Add API tags if specified or use the class name
+    decorators.push(ApiTags(...(options?.tags || [className])))
 
     // Apply all decorators
     applyDecorators(...decorators)(target)

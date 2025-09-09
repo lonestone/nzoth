@@ -6,7 +6,7 @@ import type {
 import type { ZodType } from 'zod'
 import { INestApplication } from '@nestjs/common'
 import { SwaggerModule } from '@nestjs/swagger'
-import { createSchema } from 'zod-openapi'
+import { createDocument, createSchema, CreateDocumentOptions } from 'zod-openapi'
 
 // Define schema types
 export type SchemaType = 'Body' | 'Query' | 'Route' | 'Form' | 'Other'
@@ -82,8 +82,8 @@ export function getOpenApiSchema<T>(schema: ZodType<T>): SchemaObject {
 /**
  * Adds all registered schemas to the Swagger document
  */
-export function createOpenApiDocument(app: INestApplication, config: Omit<OpenAPIObject, "paths">) {
-  const document = SwaggerModule.createDocument(app, config)
+export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit<OpenAPIObject, "paths">, zodOpenApiConfig?: CreateDocumentOptions) {
+  const document = SwaggerModule.createDocument(app, swaggerConfig)
 
   document.components = document.components || {}
   document.components.schemas = document.components.schemas || {}
@@ -104,15 +104,16 @@ export function createOpenApiDocument(app: INestApplication, config: Omit<OpenAP
     }
   }
 
-  return document
+  return createDocument(document as any, zodOpenApiConfig)
 }
 
 
 
 /**
- * Registers a schema globally and in the appropriate type storage
+ * Registers an OpenAPI SchemaObject into the registry and returns a $ref.
+ * Formerly named registerSchema; renamed to clarify that it expects an OpenAPI schema.
  */
-export function registerSchema(
+export function registerSchemaRef(
   name: string,
   schema: SchemaObject,
   type: SchemaType = 'Other',
@@ -190,8 +191,27 @@ export function autoRegisterSchema<T>(
   
   // If the schema has a title, register it automatically
   if (openApiSchema.title) {
-    registerSchema(openApiSchema.title, openApiSchema, type)
+    registerSchemaRef(openApiSchema.title, openApiSchema, type)
   }
   
   return openApiSchema
+}
+
+/**
+ * Registers a Zod schema into the OpenAPI registry.
+ * This is a clearer, explicit function to persist schemas rather than relying on
+ * getOpenApiSchema side-effects. It returns a $ref when a stable id/title exists.
+ */
+export function registerSchema<T>(
+  schema: ZodType<T>,
+  type: SchemaType = 'Other',
+): ReferenceObject | undefined {
+  const openApiSchema = getOpenApiSchema(schema)
+  const schemaId = (schema as any)._def?.openapi?.id || openApiSchema.title
+
+  if (schemaId) {
+    return registerSchemaRef(schemaId, openApiSchema, type)
+  }
+
+  return undefined
 }

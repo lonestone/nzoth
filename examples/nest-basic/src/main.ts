@@ -20,7 +20,18 @@ async function bootstrap() {
     .addTag('@lonestone')
     .build()
 
-  const document = createOpenApiDocument(app, swaggerConfig)
+  const document = createOpenApiDocument(app, swaggerConfig, {
+    override: ({ jsonSchema, zodSchema, io }) => {
+        const def = zodSchema._zod.def;
+        if (def.type === 'date' && io === 'output') {
+          jsonSchema.type = 'string';
+          jsonSchema.format = 'date-time';
+        }
+      },
+      allowEmptySchema: {
+        custom: true,
+      },
+  })
 
   SwaggerModule.setup('docs', app, document, {
     jsonDocumentUrl: '/docs-json',
