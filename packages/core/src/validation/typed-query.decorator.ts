@@ -138,8 +138,27 @@ export function TypedQueryObject<T>(schema: ZodType<T, any>) {
     const request = ctx.switchToHttp().getRequest()
     const query = request.query
 
+    // Handle array conversion for single values when schema expects arrays
+    const processedQuery = { ...query }
+    if (schema instanceof z.ZodObject) {
+      const shape = schema.shape
+      Object.entries(shape).forEach(([key, fieldSchema]) => {
+        const value = processedQuery[key]
+        if (fieldSchema instanceof z.ZodArray && !Array.isArray(value) && value !== undefined) {
+          processedQuery[key] = [value]
+        }
+        // Handle optional arrays (ZodOptional wrapping ZodArray)
+        else if (fieldSchema instanceof z.ZodOptional) {
+          const unwrapped = fieldSchema.unwrap()
+          if (unwrapped instanceof z.ZodArray && !Array.isArray(value) && value !== undefined) {
+            processedQuery[key] = [value]
+          }
+        }
+      })
+    }
+
     try {
-      return schema.parse(query)
+      return schema.parse(processedQuery)
     }
     catch (err) {
       if (err instanceof z.ZodError) {
@@ -151,7 +170,7 @@ export function TypedQueryObject<T>(schema: ZodType<T, any>) {
 
   // Return a decorator that applies all base ApiQuery decorators first
   return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
-    baseDecorators.forEach(decorator => {
+    baseDecorators.forEach((decorator) => {
       decorator(target.constructor, propertyKey, {
         value: target.constructor.prototype[propertyKey],
         writable: true,

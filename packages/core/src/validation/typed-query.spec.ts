@@ -192,6 +192,21 @@ describe('typed-query', () => {
       expect(response.body).toEqual(query)
     })
 
+    it('should accept single value as array in object query', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/typed-query/object')
+        .query({
+          q: 'test',
+          tags: 'tag1',
+        })
+        .expect(200)
+
+      expect(response.body).toEqual({
+        q: 'test',
+        tags: ['tag1'],
+      })
+    })
+
     it('should reject invalid search query', async () => {
       const query = {
         q: 't', // too short

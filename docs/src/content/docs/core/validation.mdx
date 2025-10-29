@@ -84,16 +84,18 @@ Validates a single route parameter (supports `z.coerce.number()`, custom transfo
 ## TypedQuery and TypedQueryObject
 
 ```ts
+// Example query url: /search?q=test&tags=tag1&tags=tag2
 @TypedRoute.Get()
 search(
-  @TypedQuery('q', z.string().min(2), { optional: true }) q?: string,
+  @TypedQuery('q', z.string().min(2).optional()) q?: string,
+  @TypedQuery('tags', z.array(z.string())) tags: string[],
 ) { /* ... */ }
 
 @TypedRoute.Get()
 searchAdvanced(@TypedQueryObject(ListQuery) query: z.infer<typeof ListQuery>) { /* ... */ }
 ```
 
-`TypedQuery` handles one parameter (with `{ array, optional }`), while `TypedQueryObject` validates the full query object and expands Swagger entries.
+`TypedQuery` handles one parameter, while `TypedQueryObject` validates the full query object and expands Swagger entries.
 
 ## TypedRoute
 
