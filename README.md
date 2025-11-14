@@ -1,4 +1,8 @@
-# 🐙 @lonestone - NZOTH
+<p align="center">
+  <img src="./logo.svg" width="200px" align="center" alt="Nzoth logo" />
+  <h1 align="center">@lonestone/nzoth</h1>
+</p>
+
 
 <p align="center">
   <a href="https://npmjs.com/package/@lonestone/nzoth"><img src="https://img.shields.io/npm/v/@lonestone/nzoth.svg" alt="npm package"></a>
