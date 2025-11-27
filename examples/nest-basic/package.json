@@ -1,16 +1,16 @@
 {
   "name": "@lonestone/nzoth-example-nest-basic",
+  "version": "1.1.4",
   "private": true,
-  "version": "1.1.3",
   "description": "Nest TypeScript starter repository",
   "license": "MIT",
-  "scripts": {
-    "build": "nest build",
-    "dev": "nest start --watch"
-  },
   "engines": {
     "npm": ">=10.0.0",
     "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch"
   },
   "dependencies": {
     "@lonestone/nzoth": "workspace:*",
@@ -20,8 +20,8 @@
     "@nestjs/swagger": "^11.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "zod": "^4.1.0",
-    "zod-openapi": "^5.3.1"
+    "zod": "4.1.13",
+    "zod-openapi": "^5.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

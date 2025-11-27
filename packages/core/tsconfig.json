@@ -4,7 +4,7 @@
     "target": "ES2015",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    
+
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,

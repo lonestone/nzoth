@@ -1,12 +1,12 @@
+import type { INestApplication } from '@nestjs/common'
 import type {
   OpenAPIObject,
   ReferenceObject,
   SchemaObject,
 } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import type { ZodType } from 'zod'
-import { INestApplication } from '@nestjs/common'
 import { SwaggerModule } from '@nestjs/swagger'
-import { createDocument, createSchema, CreateDocumentOptions } from 'zod-openapi'
+import { createDocument, type CreateDocumentOptions, createSchema } from 'zod-openapi'
 
 // Define schema types
 export type SchemaType = 'Body' | 'Query' | 'Route' | 'Form' | 'Other'
@@ -25,10 +25,9 @@ export const GLOBAL_SCHEMA_REGISTRY = new Map<string, SchemaObject>()
 
 // Cache OpenAPI schema conversion per Zod schema instance to avoid repeated work
 const OPENAPI_CACHE = new WeakMap<ZodType<any>, {
-  schema: SchemaObject,
+  schema: SchemaObject
   components?: { schemas?: Record<string, SchemaObject> }
 }>()
-
 
 /**
  * Converts a Zod schema to OpenAPI schema object and registers it in the schema storage
@@ -82,7 +81,7 @@ export function getOpenApiSchema<T>(schema: ZodType<T>): SchemaObject {
 /**
  * Adds all registered schemas to the Swagger document
  */
-export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit<OpenAPIObject, "paths">, zodOpenApiConfig?: CreateDocumentOptions) {
+export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit<OpenAPIObject, 'paths'>, zodOpenApiConfig?: CreateDocumentOptions) {
   const document = SwaggerModule.createDocument(app, swaggerConfig)
 
   document.components = document.components || {}
@@ -96,7 +95,7 @@ export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit
       }
     }
   })
-  
+
   // Also add schemas from global registry
   for (const [name, schema] of GLOBAL_SCHEMA_REGISTRY.entries()) {
     if (document.components && document.components.schemas) {
@@ -106,8 +105,6 @@ export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit
 
   return createDocument(document as any, zodOpenApiConfig)
 }
-
-
 
 /**
  * Registers an OpenAPI SchemaObject into the registry and returns a $ref.
@@ -131,7 +128,7 @@ export function registerSchemaRef(
         $ref: `#/components/schemas/${obj.title}`,
       } as SchemaObject
     }
-    
+
     // Check if the schema has an id in metadata that should be used for reference
     if ((obj as any)._def?.openapi?.id && (obj as any)._def.openapi.id !== name) {
       const schemaId = (obj as any)._def.openapi.id
@@ -169,7 +166,7 @@ export function registerSchemaRef(
 
   // Store the schema in the appropriate type map
   SCHEMA_STORAGE[type].set(name, cleanedSchema)
-  
+
   // Also store in global registry
   GLOBAL_SCHEMA_REGISTRY.set(name, cleanedSchema)
 
@@ -184,16 +181,16 @@ export function registerSchemaRef(
  */
 export function autoRegisterSchema<T>(
   schema: any,
-  type: SchemaType = 'Other'
+  type: SchemaType = 'Other',
 ): SchemaObject {
   // Generate OpenAPI schema
   const openApiSchema = getOpenApiSchema(schema)
-  
+
   // If the schema has a title, register it automatically
   if (openApiSchema.title) {
     registerSchemaRef(openApiSchema.title, openApiSchema, type)
   }
-  
+
   return openApiSchema
 }
 
