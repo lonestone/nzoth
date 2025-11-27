@@ -63,7 +63,7 @@
     "@nestjs/swagger": "^11.0.1",
     "rxjs": "^7.8.2",
     "zod": "^4.1.0",
-    "zod-openapi": "^5.3.1"
+    "zod-openapi": "^5.4.4"
   },
   "devDependencies": {
     "@nestjs/platform-express": "^11.0.1",
