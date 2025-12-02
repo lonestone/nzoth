@@ -209,3 +209,5 @@ Built on top of:
 - [Zod](https://github.com/colinhacks/zod)
 - [zod-openapi](https://github.com/samchungy/zod-openapi)
 
+Logo by [Alexandra Chaillou](https://fr.linkedin.com/in/alexandra-chaillou-aa56b9b4)
+
