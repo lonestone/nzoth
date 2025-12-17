@@ -4,13 +4,14 @@ on:
   release:
     types: [created]
 
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 jobs:
   publish:
     name: 📦 Publish to npm
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # Need write permission to create version commit
-      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,6 +21,11 @@ jobs:
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
+
+      # Ensure npm 11.5.1 or later for trusted publishing
+      # pnpm will manage npm version at one point https://github.com/pnpm/pnpm/issues/9812#issuecomment-3192027515
+      - name: Setup npm version
+        run: npm install -g npm@latest
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -59,5 +65,4 @@ jobs:
       - name: Publish to npm
         run: cd packages/core && pnpm publish --access public --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true 
+          NPM_CONFIG_PROVENANCE: true
