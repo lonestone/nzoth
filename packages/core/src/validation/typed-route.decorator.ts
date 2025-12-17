@@ -4,34 +4,34 @@ import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec
 import type { ZodType } from 'zod'
 import { applyDecorators, Delete, Get, Patch, Post, Put, UseInterceptors } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
-import { getOpenApiSchema } from '../openapi/openapi.js'
-import { registerSchemaRef } from '../openapi/openapi.js'
-import { ZodSerializationException } from './validation.exception'
 import { Observable } from 'rxjs'
+import { getOpenApiSchema, registerSchemaRef } from '../openapi/openapi.js'
+import { ZodSerializationException } from './validation.exception'
 
 /**
  * Interceptor that validates response data against a Zod schema
  */
 class TypedRouteInterceptor implements NestInterceptor {
-    constructor(private readonly schema: ZodType<any, any>) { }
-  
-    intercept(_: ExecutionContext, next: CallHandler) {
-      return new Observable(observer => {
-        next.handle().subscribe({
-          next: value => {
-            const result = this.schema.safeParse(value);
-            if (!result.success) {
-              observer.error(new ZodSerializationException(result.error));
-            } else {
-              observer.next(result.data);
-            }
-          },
-          error: err => observer.error(err),
-          complete: () => observer.complete(),
-        });
-      });
-    }
+  constructor(private readonly schema: ZodType<any, any>) { }
+
+  intercept(_: ExecutionContext, next: CallHandler) {
+    return new Observable((observer) => {
+      next.handle().subscribe({
+        next: (value) => {
+          const result = this.schema.safeParse(value)
+          if (!result.success) {
+            observer.error(new ZodSerializationException(result.error))
+          }
+          else {
+            observer.next(result.data)
+          }
+        },
+        error: err => observer.error(err),
+        complete: () => observer.complete(),
+      })
+    })
   }
+}
 
 const ROUTERS = {
   Get,
@@ -119,7 +119,7 @@ export function applyControllerParamsToRoute(
   function registerNestedSchemas(schema: SchemaObject, originalZodSchema?: ZodType<any>) {
     // Check if the schema has an id in metadata and use it for registration
     const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
-    
+
     if (schemaId) {
       registerSchemaRef(schemaId, schema, 'Route')
     }
@@ -197,7 +197,7 @@ function createRouteDecorator(method: keyof typeof ROUTERS) {
       function registerNestedSchemas(schema: SchemaObject, originalZodSchema?: ZodType<any>) {
         // Check if the schema has an id in metadata and use it for registration
         const schemaId = (originalZodSchema as any)?._def?.openapi?.id || schema.title
-        
+
         if (schemaId) {
           registerSchemaRef(schemaId, schema, 'Route')
         }
