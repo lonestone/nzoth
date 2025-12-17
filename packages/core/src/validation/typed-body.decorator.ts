@@ -1,5 +1,4 @@
 import type { ExecutionContext } from '@nestjs/common'
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import type { ZodType } from 'zod'
 import { BadRequestException, createParamDecorator } from '@nestjs/common'
 import { ApiBody } from '@nestjs/swagger'

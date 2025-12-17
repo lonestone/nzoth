@@ -93,15 +93,15 @@ describe('typed-query', () => {
     })
 
     it('should accept valid query parameters string', async () => {
-        const response = await request(app.getHttpServer())
-          .get('/typed-query/single?q=test&page=42')
-          .expect(200)
-  
-        expect(response.body).toEqual({
-          query: 'test',
-          page: 42,
-        })
+      const response = await request(app.getHttpServer())
+        .get('/typed-query/single?q=test&page=42')
+        .expect(200)
+
+      expect(response.body).toEqual({
+        query: 'test',
+        page: 42,
       })
+    })
 
     it('should accept query without optional param', async () => {
       const response = await request(app.getHttpServer())

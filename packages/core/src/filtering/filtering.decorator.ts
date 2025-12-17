@@ -1,4 +1,4 @@
-import { createFilterQueryStringSchema } from './filtering.js'
+import type { createFilterQueryStringSchema } from './filtering.js'
 import { TypedQuery } from '../validation/typed-query.decorator.js'
 
 /**

@@ -9,6 +9,7 @@ export default antfu(
       '**/dist/',
       '**/temp/',
       '**/build/',
+      '**/.astro/',
     ],
     rules: {
       'ts/interface-name-prefix': 'off',

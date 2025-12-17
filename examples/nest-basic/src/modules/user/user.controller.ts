@@ -34,8 +34,8 @@ import {
     description: 'User schema',
   }),
   {
-    tags: ['User',]
-  }
+    tags: ['User'],
+  },
 )
 export class UserController {
   @TypedRoute.Get('', UsersSchema)
@@ -49,12 +49,11 @@ export class UserController {
 
     // Parse and apply filters
     if (filters) {
-      
       // Apply basic filtering (example implementation)
-      filters.forEach(filter => {
+      filters.forEach((filter) => {
         if (filter.rule === 'eq' && filter.value) {
-          filteredUsers = filteredUsers.filter(user => 
-            (user as any)[filter.property]?.toString() === filter.value
+          filteredUsers = filteredUsers.filter(user =>
+            (user as any)[filter.property]?.toString() === filter.value,
           )
         }
         // Add more filter rules as needed
@@ -64,7 +63,7 @@ export class UserController {
     // Parse and apply sorting
     if (sort) {
       const sortItems = sort.map(sortItem => ({ property: sortItem.property, direction: sortItem.direction }))
-      
+
       // Apply sorting (example implementation)
       if (sortItems.length > 0) {
         filteredUsers.sort((a, b) => {

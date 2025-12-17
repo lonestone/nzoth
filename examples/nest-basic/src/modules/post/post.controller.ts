@@ -25,14 +25,14 @@ export class PostController {
   findAll(
     @TypedQuery('q', z.string().optional()) q: string,
   ): Posts {
-    let filteredPosts = [
+    const filteredPosts = [
       {
         id: '1',
         title: 'Post 1',
         description: 'Post 1 description',
         content: 'Post 1 content',
       },
-    ]
+    ].filter(post => post.title.includes(q))
     return {
       data: filteredPosts,
       meta: {

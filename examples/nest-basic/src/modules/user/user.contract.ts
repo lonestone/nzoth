@@ -5,16 +5,14 @@ import {
   createPaginationQuerySchema,
   createSortingQueryStringSchema,
   paginatedSchema,
+  registerSchema,
 } from '@lonestone/nzoth/server'
 import { z } from 'zod'
 import 'zod-openapi'
 
-
-import { registerSchema } from "@lonestone/nzoth/server"
-
 const miscSchema = z.enum(['yes', 'no']).meta({
-    title: 'Misc',
-    description: 'Misc schema only for testing',
+  title: 'Misc',
+  description: 'Misc schema only for testing',
 })
 
 registerSchema(miscSchema)
@@ -38,7 +36,8 @@ export const UserSchema = z
     tags: UserTags,
     clientId: z.uuid(),
     createdAt: z.date(),
-  }).meta({
+  })
+  .meta({
     title: 'User',
     description: 'User schema',
   })
@@ -120,7 +119,7 @@ export type UserSorting = z.infer<typeof userSortingSchema>
 export const userPaginationSchema = createPaginationQuerySchema({
   defaultPageSize: 10,
   maxPageSize: 50,
-  minPageSize: 1
+  minPageSize: 1,
 })
 
 export type UserPagination = z.infer<typeof userPaginationSchema>

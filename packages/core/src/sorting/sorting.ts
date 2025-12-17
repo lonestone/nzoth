@@ -7,7 +7,7 @@ export interface Sort<T extends readonly string[]> {
 }
 
 export const SortDirection = z.enum(['asc', 'desc'], {
-  error: (issue) => {
+  error: (_issue) => {
     return {
       message: 'Invalid sort direction. Use either "asc" or "desc"',
       code: 'invalid_direction',

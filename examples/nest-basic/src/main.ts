@@ -1,15 +1,15 @@
+import { createOpenApiDocument, ZodSerializationExceptionFilter, ZodValidationExceptionFilter } from '@lonestone/nzoth/server'
 // main.ts
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
-import { createOpenApiDocument, ZodValidationExceptionFilter, ZodSerializationExceptionFilter} from '@lonestone/nzoth/server'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
   app.useGlobalFilters(
     new ZodValidationExceptionFilter(),
-    new ZodSerializationExceptionFilter()
+    new ZodSerializationExceptionFilter(),
   )
 
   const swaggerConfig = new DocumentBuilder()
@@ -22,15 +22,15 @@ async function bootstrap() {
 
   const document = createOpenApiDocument(app, swaggerConfig, {
     override: ({ jsonSchema, zodSchema, io }) => {
-        const def = zodSchema._zod.def;
-        if (def.type === 'date' && io === 'output') {
-          jsonSchema.type = 'string';
-          jsonSchema.format = 'date-time';
-        }
-      },
-      allowEmptySchema: {
-        custom: true,
-      },
+      const def = zodSchema._zod.def
+      if (def.type === 'date' && io === 'output') {
+        jsonSchema.type = 'string'
+        jsonSchema.format = 'date-time'
+      }
+    },
+    allowEmptySchema: {
+      custom: true,
+    },
   })
 
   SwaggerModule.setup('docs', app, document, {

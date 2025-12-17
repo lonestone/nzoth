@@ -3,7 +3,7 @@ import type { ZodType } from 'zod'
 import { applyDecorators, Controller } from '@nestjs/common'
 import { ApiParam, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
-import { registerSchemaRef, getOpenApiSchema } from '../openapi/openapi'
+import { getOpenApiSchema, registerSchemaRef } from '../openapi/openapi'
 import { PENDING_ROUTE_METADATA } from './typed-route.decorator'
 
 // Interface to define controller parameter metadata

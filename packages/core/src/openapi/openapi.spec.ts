@@ -1,20 +1,20 @@
-import { z } from 'zod'
-import { describe, expect, it, beforeEach, beforeAll, afterAll } from 'vitest'
 import type { INestApplication } from '@nestjs/common'
 import { Module } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import { 
-  getOpenApiSchema, 
-  registerSchemaRef,
-  autoRegisterSchema,
-  SCHEMA_STORAGE,
-  GLOBAL_SCHEMA_REGISTRY,
-  createOpenApiDocument,
-  registerSchema,
-} from './openapi'
 import { DocumentBuilder } from '@nestjs/swagger'
+import { Test } from '@nestjs/testing'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { z } from 'zod'
 import { TypedController } from '../validation/typed-controller.decorator'
 import { TypedRoute } from '../validation/typed-route.decorator'
+import {
+  autoRegisterSchema,
+  createOpenApiDocument,
+  getOpenApiSchema,
+  GLOBAL_SCHEMA_REGISTRY,
+  registerSchema,
+  registerSchemaRef,
+  SCHEMA_STORAGE,
+} from './openapi'
 
 describe('openapi', () => {
   beforeEach(() => {
@@ -109,7 +109,6 @@ describe('openapi', () => {
     })
   })
 
-
   describe('integration with meta information', () => {
     it('should preserve meta information in OpenAPI schema', () => {
       const schema = z.string().meta({
@@ -157,9 +156,9 @@ describe('openapi', () => {
         type: 'object',
         properties: {
           name: { type: 'string' },
-          age: { type: 'number' }
+          age: { type: 'number' },
         },
-        required: ['name', 'age']
+        required: ['name', 'age'],
       } as any
 
       const reference = registerSchemaRef('User', schema, 'Body')
@@ -178,10 +177,10 @@ describe('openapi', () => {
             title: 'Address',
             properties: {
               street: { type: 'string' },
-              city: { type: 'string' }
-            }
-          }
-        }
+              city: { type: 'string' },
+            },
+          },
+        },
       } as any
 
       registerSchemaRef('User', schema, 'Body')
@@ -192,7 +191,7 @@ describe('openapi', () => {
 
     it('should default to Other type when no type specified', () => {
       const schema = {
-        type: 'string'
+        type: 'string',
       } as any
 
       registerSchemaRef('SimpleString', schema)
@@ -205,9 +204,9 @@ describe('openapi', () => {
     it('should auto-register schema with title', () => {
       const schema = z.object({
         name: z.string(),
-        age: z.number()
+        age: z.number(),
       }).meta({
-        title: 'AutoUser'
+        title: 'AutoUser',
       })
 
       const result = autoRegisterSchema(schema, 'Query')
@@ -220,7 +219,7 @@ describe('openapi', () => {
     it('should not register schema without title', () => {
       const schema = z.object({
         name: z.string(),
-        age: z.number()
+        age: z.number(),
       })
 
       const result = autoRegisterSchema(schema, 'Route')
@@ -232,7 +231,7 @@ describe('openapi', () => {
 
     it('should default to Other type when no type specified', () => {
       const schema = z.string().meta({
-        title: 'SimpleString'
+        title: 'SimpleString',
       })
 
       autoRegisterSchema(schema)
@@ -241,7 +240,7 @@ describe('openapi', () => {
     })
   })
 
-  describe('SCHEMA_STORAGE', () => {
+  describe('sCHEMA_STORAGE', () => {
     it('should have all schema types initialized', () => {
       expect(SCHEMA_STORAGE.Body).toBeInstanceOf(Map)
       expect(SCHEMA_STORAGE.Query).toBeInstanceOf(Map)
@@ -251,13 +250,13 @@ describe('openapi', () => {
     })
 
     it('should be empty initially', () => {
-      Object.values(SCHEMA_STORAGE).forEach(map => {
+      Object.values(SCHEMA_STORAGE).forEach((map) => {
         expect(map.size).toBe(0)
       })
     })
   })
 
-  describe('GLOBAL_SCHEMA_REGISTRY', () => {
+  describe('gLOBAL_SCHEMA_REGISTRY', () => {
     it('should be a Map instance', () => {
       expect(GLOBAL_SCHEMA_REGISTRY).toBeInstanceOf(Map)
     })

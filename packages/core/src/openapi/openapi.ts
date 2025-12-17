@@ -179,8 +179,8 @@ export function registerSchemaRef(
  * Automatically registers a Zod schema and returns its OpenAPI representation
  * This is the main function that should be used by decorators
  */
-export function autoRegisterSchema<T>(
-  schema: any,
+export function autoRegisterSchema(
+  schema: ZodType<any>,
   type: SchemaType = 'Other',
 ): SchemaObject {
   // Generate OpenAPI schema

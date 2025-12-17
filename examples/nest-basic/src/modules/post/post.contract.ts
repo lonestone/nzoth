@@ -10,7 +10,8 @@ export const PostSchema = z
     title: z.string().min(2),
     description: z.string().min(2),
     content: z.string().min(2),
-  }).meta({
+  })
+  .meta({
     title: 'Post',
     description: 'Post schema',
   })
@@ -48,4 +49,4 @@ export const PostUpdateSchema = z
     description: 'Post update schema',
   })
 
-export type PostUpdate = z.infer<typeof PostUpdateSchema>   
+export type PostUpdate = z.infer<typeof PostUpdateSchema>

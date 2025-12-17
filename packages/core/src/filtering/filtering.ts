@@ -80,12 +80,11 @@ export function FilteringStringItemSchema<T extends readonly string[]>(
       // For IS_NULL and IS_NOT_NULL, exactly 2 parts are required
       if ([FilterRule.IS_NULL, FilterRule.IS_NOT_NULL].includes(rule as FilterRule)) {
         if (parts.length !== 2) {
-                  ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'IS_NULL and IS_NOT_NULL rules should not have a value',
-          path: [],
-        })
-        return
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'IS_NULL and IS_NOT_NULL rules should not have a value',
+            path: [],
+          })
         }
       }
       // For other rules, exactly 3 parts are required
@@ -95,7 +94,6 @@ export function FilteringStringItemSchema<T extends readonly string[]>(
           message: 'Value is required for this filter rule',
           path: [],
         })
-        return
       }
     })
     .transform((value): Filtering => {
@@ -148,8 +146,8 @@ export function createFilterQueryStringSchema<T extends readonly string[]>(
     <br> Available properties: ${availableFilteringKeys.join(', ')}`,
         example: 'name:eq:John;age:gt:30',
         override: {
-            type: 'string',
-            format: 'filter',
+          type: 'string',
+          format: 'filter',
         },
       })
   )
