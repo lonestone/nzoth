@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm --parallel dev",
     "test": "pnpm -r test",
+    "test:ui": "pnpm -r test:ui",
     "version:patch": "pnpm version patch",
     "version:minor": "pnpm version minor",
     "version:major": "pnpm version major",

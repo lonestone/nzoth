@@ -4,6 +4,8 @@ import { DocumentBuilder } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import { createFilterQueryStringSchema } from '../filtering/filtering'
+import { createSortingQueryStringSchema } from '../sorting/sorting'
 import { TypedController } from '../validation/typed-controller.decorator'
 import { TypedRoute } from '../validation/typed-route.decorator'
 import {
@@ -246,6 +248,7 @@ describe('openapi', () => {
       expect(SCHEMA_STORAGE.Query).toBeInstanceOf(Map)
       expect(SCHEMA_STORAGE.Route).toBeInstanceOf(Map)
       expect(SCHEMA_STORAGE.Form).toBeInstanceOf(Map)
+      expect(SCHEMA_STORAGE.Multipart).toBeInstanceOf(Map)
       expect(SCHEMA_STORAGE.Other).toBeInstanceOf(Map)
     })
 
@@ -403,6 +406,140 @@ describe('openapi', () => {
       expect(oneSchema).toEqual({ $ref: '#/components/schemas/User' })
 
       await app.close()
+    })
+  })
+
+  describe('createFilterQueryStringSchema', () => {
+    it('should convert filter query schema to OpenAPI schema', () => {
+      const filterSchema = createFilterQueryStringSchema(['name', 'age', 'email'] as const)
+      const result = getOpenApiSchema(filterSchema)
+
+      expect(result).toBeDefined()
+      expect(result.title).toBe('FilterQueryStringSchema')
+      expect(result.description).toBeDefined()
+      expect(result.example).toBe('name:eq:John;age:gt:30')
+    })
+
+    it('should register filter query schema with autoRegisterSchema', () => {
+      const filterSchema = createFilterQueryStringSchema(['name', 'age'] as const)
+      const result = autoRegisterSchema(filterSchema, 'Query')
+
+      expect(result.title).toBe('FilterQueryStringSchema')
+      expect(SCHEMA_STORAGE.Query.has('FilterQueryStringSchema')).toBe(true)
+      expect(GLOBAL_SCHEMA_REGISTRY.has('FilterQueryStringSchema')).toBe(true)
+    })
+
+    it('should include filter schema in OpenAPI document', async () => {
+      @Module({})
+      class TestModule {}
+
+      const filterSchema = createFilterQueryStringSchema(['name', 'age', 'email'] as const)
+      registerSchema(filterSchema, 'Query')
+
+      const config = new DocumentBuilder()
+        .setOpenAPIVersion('3.1.0')
+        .setTitle('Test')
+        .setVersion('1.0.0')
+        .build()
+
+      const moduleRef = await Test.createTestingModule({
+        imports: [TestModule],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      const doc = createOpenApiDocument(app, config as any)
+
+      expect(doc.components?.schemas?.FilterQueryStringSchema).toBeDefined()
+      const schema = doc.components?.schemas?.FilterQueryStringSchema
+      if (schema && !('$ref' in schema)) {
+        expect(schema.title).toBe('FilterQueryStringSchema')
+        expect(schema.description).toBeDefined()
+        expect(schema.example).toBe('name:eq:John;age:gt:30')
+      }
+
+      await app.close()
+    })
+
+    it('should handle different filter keys in schema', () => {
+      const filterSchema1 = createFilterQueryStringSchema(['name', 'age'] as const)
+      const filterSchema2 = createFilterQueryStringSchema(['email', 'status'] as const)
+
+      const result1 = getOpenApiSchema(filterSchema1)
+      const result2 = getOpenApiSchema(filterSchema2)
+
+      expect(result1.title).toBe('FilterQueryStringSchema')
+      expect(result2.title).toBe('FilterQueryStringSchema')
+      expect(result1.description).toContain('name, age')
+      expect(result2.description).toContain('email, status')
+    })
+  })
+
+  describe('createSortingQueryStringSchema', () => {
+    it('should convert sorting query schema to OpenAPI schema', () => {
+      const sortingSchema = createSortingQueryStringSchema(['name', 'age', 'email'] as const)
+      const result = getOpenApiSchema(sortingSchema)
+
+      expect(result).toBeDefined()
+      expect(result.title).toBe('SortingQueryStringSchema')
+      expect(result.description).toBeDefined()
+      expect(result.example).toBe('name:asc,age:desc')
+    })
+
+    it('should register sorting query schema with autoRegisterSchema', () => {
+      const sortingSchema = createSortingQueryStringSchema(['name', 'age'] as const)
+      const result = autoRegisterSchema(sortingSchema, 'Query')
+
+      expect(result.title).toBe('SortingQueryStringSchema')
+      expect(SCHEMA_STORAGE.Query.has('SortingQueryStringSchema')).toBe(true)
+      expect(GLOBAL_SCHEMA_REGISTRY.has('SortingQueryStringSchema')).toBe(true)
+    })
+
+    it('should include sorting schema in OpenAPI document', async () => {
+      @Module({})
+      class TestModule {}
+
+      const sortingSchema = createSortingQueryStringSchema(['name', 'age', 'email'] as const)
+      registerSchema(sortingSchema, 'Query')
+
+      const config = new DocumentBuilder()
+        .setOpenAPIVersion('3.1.0')
+        .setTitle('Test')
+        .setVersion('1.0.0')
+        .build()
+
+      const moduleRef = await Test.createTestingModule({
+        imports: [TestModule],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      const doc = createOpenApiDocument(app, config as any)
+
+      expect(doc.components?.schemas?.SortingQueryStringSchema).toBeDefined()
+      const schema = doc.components?.schemas?.SortingQueryStringSchema
+      if (schema && !('$ref' in schema)) {
+        expect(schema.title).toBe('SortingQueryStringSchema')
+        expect(schema.description).toBeDefined()
+        expect(schema.example).toBe('name:asc,age:desc')
+      }
+
+      await app.close()
+    })
+
+    it('should handle different sorting keys in schema', () => {
+      const sortingSchema1 = createSortingQueryStringSchema(['name', 'age'] as const)
+      const sortingSchema2 = createSortingQueryStringSchema(['email', 'status'] as const)
+
+      const result1 = getOpenApiSchema(sortingSchema1)
+      const result2 = getOpenApiSchema(sortingSchema2)
+
+      expect(result1.title).toBe('SortingQueryStringSchema')
+      expect(result2.title).toBe('SortingQueryStringSchema')
+      expect(result1.description).toBeDefined()
+      expect(result2.description).toBeDefined()
     })
   })
 })
