@@ -25,5 +25,10 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "typescript": "5.8.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "zod": "4.1.13"
+    }
   }
 }
