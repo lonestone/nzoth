@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common'
 import type { ZodType } from 'zod'
 import { BadRequestException, createParamDecorator } from '@nestjs/common'
-import { ApiBody } from '@nestjs/swagger'
+import { ApiBody, ApiConsumes } from '@nestjs/swagger'
 import { z } from 'zod'
 import { autoRegisterSchema } from '../openapi/openapi.js'
 import { ZodValidationException } from './validation.exception'
@@ -23,6 +23,16 @@ function isFormUrlEncoded(contentType?: string): boolean {
       .split(';')
       .map(str => str.trim())
       .includes('application/x-www-form-urlencoded')
+  )
+}
+
+function isMultipartFormData(contentType?: string): boolean {
+  return (
+    contentType !== undefined
+    && contentType
+      .split(';')
+      .map(str => str.trim())
+      .includes('multipart/form-data')
   )
 }
 
@@ -191,6 +201,86 @@ export function TypedFormBody<T>(schema: ZodType<T, any, any>) {
 
   // Return a decorator that applies our base ApiBody first (so manual decorators take precedence)
   return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
+    baseDecorator(target.constructor, propertyKey, {
+      value: target.constructor.prototype[propertyKey],
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
+    return paramDecorator()(target, propertyKey, parameterIndex)
+  }
+}
+
+/**
+ * Type-safe multipart/form-data body decorator that validates form fields using Zod schemas.
+ * Automatically generates OpenAPI documentation from the schema using zod-openapi.
+ * Expects multipart/form-data content type.
+ *
+ * For the request body to be parsed, the route must use Multer (e.g. `FileInterceptor`,
+ * `FilesInterceptor`, or `MulterModule`) so that `request.body` is populated with form fields.
+ * File uploads remain available via `@UploadedFile()` / `@UploadedFiles()`.
+ *
+ * @param schema - Zod schema for validating form fields (values from multipart are strings; use z.coerce for numbers, etc.)
+ * @see https://lonestone.github.io/nzoth/core/validation/
+ *
+ * @example
+ * ```typescript
+ * const UploadSchema = z.object({
+ *   title: z.string().min(1),
+ *   description: z.string().optional(),
+ * }).meta({
+ *   title: 'UploadForm',
+ *   description: 'Multipart form fields'
+ * })
+ *
+ * @Post('upload')
+ * @UseInterceptors(FileInterceptor('file'))
+ * upload(
+ *   @TypedMultipartBody(UploadSchema) data: z.infer<typeof UploadSchema>,
+ *   @UploadedFile() file: Express.Multer.File,
+ * ) {
+ *   return this.service.upload(data, file)
+ * }
+ * ```
+ */
+export function TypedMultipartBody<T>(schema: ZodType<T, any, any>) {
+  const openApiSchema = autoRegisterSchema(schema, 'Multipart')
+
+  const apiConsumesDecorator = ApiConsumes('multipart/form-data')
+  const baseDecorator = ApiBody({
+    required: true,
+    schema: openApiSchema,
+    description: openApiSchema.description,
+  })
+
+  const paramDecorator = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest()
+    const contentType = request.headers['content-type']
+
+    if (!isMultipartFormData(contentType)) {
+      throw new BadRequestException('Content-Type must be multipart/form-data')
+    }
+
+    // request.body is populated by Multer when using FileInterceptor, etc.
+    const data = request.body ?? {}
+    try {
+      return schema.parse(data)
+    }
+    catch (err) {
+      if (err instanceof z.ZodError) {
+        throw new ZodValidationException(err)
+      }
+      throw err
+    }
+  })
+
+  return (target: object, propertyKey: string | symbol, parameterIndex: number) => {
+    apiConsumesDecorator(target.constructor, propertyKey, {
+      value: target.constructor.prototype[propertyKey],
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
     baseDecorator(target.constructor, propertyKey, {
       value: target.constructor.prototype[propertyKey],
       writable: true,

@@ -9,6 +9,7 @@ NZOTH provides decorators to validate inputs/outputs in NestJS using Zod, and to
 - `TypedRoute.[Get|Post|Put|Patch|Delete](path?, responseSchema?, apiResponseOptions?)` — validate/serialize responses
 - `TypedBody(schema)` — validate JSON request bodies
 - `TypedFormBody(schema)` — validate `application/x-www-form-urlencoded` bodies
+- `TypedMultipartBody(schema)` — validate `multipart/form-data` bodies
 - `TypedParam(key, schema)` — validate a single route param
 - `TypedQuery(key, schema, { array?, optional? })` — validate a single query param
 - `TypedQueryObject(schema)` — validate the full query object
@@ -71,6 +72,23 @@ create(@TypedBody(CreateUser) dto: z.infer<typeof CreateUser>) {
 ```
 
 Ensures `Content-Type: application/json`, validates with Zod, and registers an `ApiBody` schema.
+
+
+## TypedMultipartBody
+
+```ts
+@TypedRoute.Post('', Medias)
+@UseInterceptors(FileInterceptor('file'))
+multipartBody(
+  @TypedMultipartBody(MultipartUploadSchema) data: MultipartUploadDto,
+  @UploadedFile() file: Express.Multer.File,
+) {
+  return { data, file }
+}
+```
+
+Ensures `Content-Type: multipart/form-data`, validates with Zod, and registers an `ApiBody` schema.
+
 
 ## TypedParam
 

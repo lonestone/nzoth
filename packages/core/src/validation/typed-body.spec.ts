@@ -1,13 +1,13 @@
 import type { INestApplication } from '@nestjs/common'
-import { Controller, Module, Post } from '@nestjs/common'
+import { Controller, Module, Post, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBody } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { TypedBody, TypedFormBody } from './typed-body.decorator'
+import { TypedBody, TypedFormBody, TypedMultipartBody } from './typed-body.decorator'
 import 'zod-openapi'
-
 // Test schemas
 const CreateUserSchema = z
   .object({
@@ -25,6 +25,19 @@ const FileUploadSchema = z
   })
 
 type FileUploadDto = z.infer<typeof FileUploadSchema>
+
+const MultipartUploadSchema = z
+  .object({
+    title: z.string().min(1),
+    description: z.string().optional(),
+  })
+
+type MultipartUploadDto = z.infer<typeof MultipartUploadSchema>
+
+// Fake file for multipart tests (FileInterceptor expects a 'file' field)
+// eslint-disable-next-line node/prefer-global/buffer
+const FAKE_FILE = Buffer.from('fake file content')
+const FAKE_FILENAME = 'test.txt'
 
 // Test controller
 @Controller('typed-body')
@@ -55,6 +68,15 @@ class TestController {
   @Post('form')
   formBody(@TypedFormBody(FileUploadSchema) data: FileUploadDto) {
     return data
+  }
+
+  @Post('multipart')
+  @UseInterceptors(FileInterceptor('file'))
+  multipartBody(
+    @TypedMultipartBody(MultipartUploadSchema) data: MultipartUploadDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return { data, file }
   }
 
   @Post('override')
@@ -241,6 +263,60 @@ describe('typed-body', () => {
         .send({
           description: 'Missing file field',
         })
+        .expect(400)
+    })
+  })
+
+  describe('pOST /typed-body/multipart', () => {
+    it('should accept valid multipart/form-data', async () => {
+      const validBody = {
+        title: 'My upload',
+        description: 'Optional description',
+      }
+
+      const response = await request(app.getHttpServer())
+        .post('/typed-body/multipart')
+        .field('title', validBody.title)
+        .field('description', validBody.description)
+        .attach('file', FAKE_FILE, FAKE_FILENAME)
+        .expect(201)
+
+      const { buffer, ...restFile } = response.body.file
+      expect({ data: response.body.data, file: restFile }).toEqual({ data: validBody, file: restFile })
+    })
+
+    it('should accept multipart with only required field', async () => {
+      const validBody = { title: 'Minimal' }
+
+      const response = await request(app.getHttpServer())
+        .post('/typed-body/multipart')
+        .field('title', validBody.title)
+        .attach('file', FAKE_FILE, FAKE_FILENAME)
+        .expect(201)
+
+      const { buffer, ...restFile } = response.body.file
+      expect({ data: response.body.data, file: restFile }).toEqual({ data: validBody, file: {
+        fieldname: 'file',
+        originalname: FAKE_FILENAME,
+        encoding: '7bit',
+        mimetype: 'text/plain',
+        size: FAKE_FILE.length,
+      } })
+    })
+
+    it('should reject multipart with incorrect content-type', async () => {
+      await request(app.getHttpServer())
+        .post('/typed-body/multipart')
+        .set('Content-Type', 'application/json')
+        .send({ title: 'Test' })
+        .expect(400)
+    })
+
+    it('should reject invalid multipart data', async () => {
+      await request(app.getHttpServer())
+        .post('/typed-body/multipart')
+        .field('title', '') // min(1) fails
+        .attach('file', FAKE_FILE, FAKE_FILENAME)
         .expect(400)
     })
   })

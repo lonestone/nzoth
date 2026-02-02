@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm --parallel dev",
     "test": "pnpm -r test",
+    "test:ui": "pnpm -r test:ui",
     "version:patch": "pnpm version patch",
     "version:minor": "pnpm version minor",
     "version:major": "pnpm version major",
@@ -24,5 +25,10 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "typescript": "5.8.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "zod": "4.1.13"
+    }
   }
 }

@@ -9,7 +9,7 @@ import { SwaggerModule } from '@nestjs/swagger'
 import { createDocument, type CreateDocumentOptions, createSchema } from 'zod-openapi'
 
 // Define schema types
-export type SchemaType = 'Body' | 'Query' | 'Route' | 'Form' | 'Other'
+export type SchemaType = 'Body' | 'Query' | 'Route' | 'Form' | 'Multipart' | 'Other'
 
 // Organize schemas by type
 export const SCHEMA_STORAGE: Record<SchemaType, Map<string, SchemaObject>> = {
@@ -17,6 +17,7 @@ export const SCHEMA_STORAGE: Record<SchemaType, Map<string, SchemaObject>> = {
   Query: new Map<string, SchemaObject>(),
   Route: new Map<string, SchemaObject>(),
   Form: new Map<string, SchemaObject>(),
+  Multipart: new Map<string, SchemaObject>(),
   Other: new Map<string, SchemaObject>(),
 }
 
