@@ -1,4 +1,7 @@
 packages:
   - 'examples/*'
   - 'packages/*'
-  - 'docs'
+  - docs
+catalog:
+  zod: ~4.3.6
+  zod-openapi: ~5.4.6
