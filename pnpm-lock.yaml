@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  zod: 4.1.13
-
 importers:
 
   .:
@@ -66,7 +63,7 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       zod:
-        specifier: 4.1.13
+        specifier: ^4.0.0
         version: 4.1.13
       zod-openapi:
         specifier: ^5.4.5
@@ -145,7 +142,7 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       zod:
-        specifier: 4.1.13
+        specifier: ~4.1.13
         version: 4.1.13
       zod-openapi:
         specifier: ^5.4.5
@@ -6248,18 +6245,21 @@ packages:
     resolution: {integrity: sha512-P2jsOOBAq/6hCwUsMCjUATZ8szkMsV5VAwZENfyxp2Hc/XPJQpVwAgevWZc65xZauCwWB9LAn7zYeiCJFAEL+A==}
     engines: {node: '>=20'}
     peerDependencies:
-      zod: 4.1.13
+      zod: ^3.25.74 || ^4.0.0
 
   zod-to-json-schema@3.25.1:
     resolution: {integrity: sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA==}
     peerDependencies:
-      zod: 4.1.13
+      zod: ^3.25 || ^4
 
   zod-to-ts@1.2.0:
     resolution: {integrity: sha512-x30XE43V+InwGpvTySRNz9kB7qFU8DlyEy7BsSTCHPH1R0QasMmHWZDCzYm6bVXtj/9NNJAZF3jW8rzFvH5OFA==}
     peerDependencies:
       typescript: ^4.9.4 || ^5.0.2
-      zod: 4.1.13
+      zod: ^3
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.1.13:
     resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
@@ -6441,7 +6441,7 @@ snapshots:
     dependencies:
       sitemap: 8.0.2
       stream-replace-string: 2.0.0
-      zod: 4.1.13
+      zod: 3.25.76
 
   '@astrojs/starlight@0.35.3(astro@5.17.1(@types/node@22.19.7)(rollup@4.57.1)(terser@5.46.0)(typescript@5.9.3)(yaml@2.8.2))':
     dependencies:
@@ -8856,9 +8856,9 @@ snapshots:
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
       yocto-spinner: 0.2.3
-      zod: 4.1.13
-      zod-to-json-schema: 3.25.1(zod@4.1.13)
-      zod-to-ts: 1.2.0(typescript@5.9.3)(zod@4.1.13)
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.1(zod@3.25.76)
+      zod-to-ts: 1.2.0(typescript@5.9.3)(zod@3.25.76)
     optionalDependencies:
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -13563,14 +13563,16 @@ snapshots:
     dependencies:
       zod: 4.1.13
 
-  zod-to-json-schema@3.25.1(zod@4.1.13):
+  zod-to-json-schema@3.25.1(zod@3.25.76):
     dependencies:
-      zod: 4.1.13
+      zod: 3.25.76
 
-  zod-to-ts@1.2.0(typescript@5.9.3)(zod@4.1.13):
+  zod-to-ts@1.2.0(typescript@5.9.3)(zod@3.25.76):
     dependencies:
       typescript: 5.9.3
-      zod: 4.1.13
+      zod: 3.25.76
+
+  zod@3.25.76: {}
 
   zod@4.1.13: {}
 
