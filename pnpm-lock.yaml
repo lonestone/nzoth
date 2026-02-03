@@ -4,6 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    zod:
+      specifier: ~4.3.6
+      version: 4.3.6
+    zod-openapi:
+      specifier: ~5.4.6
+      version: 5.4.6
+
 importers:
 
   .:
@@ -63,11 +72,11 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       zod:
-        specifier: ^4.0.0
-        version: 4.1.13
+        specifier: 'catalog:'
+        version: 4.3.6
       zod-openapi:
-        specifier: ^5.4.5
-        version: 5.4.6(zod@4.1.13)
+        specifier: 'catalog:'
+        version: 5.4.6(zod@4.3.6)
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0
@@ -142,11 +151,11 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       zod:
-        specifier: ~4.1.13
-        version: 4.1.13
+        specifier: 'catalog:'
+        version: 4.3.6
       zod-openapi:
-        specifier: ^5.4.5
-        version: 5.4.6(zod@4.1.13)
+        specifier: 'catalog:'
+        version: 5.4.6(zod@4.3.6)
     devDependencies:
       '@nestjs/common':
         specifier: ^11.0.0
@@ -6261,8 +6270,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.13:
-    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6949,7 +6958,7 @@ snapshots:
       '@eslint-react/eff': 1.53.1
       '@typescript-eslint/utils': 8.54.0(eslint@9.39.2)(typescript@5.8.2)
       ts-pattern: 5.9.0
-      zod: 4.1.13
+      zod: 4.3.6
     transitivePeerDependencies:
       - eslint
       - supports-color
@@ -6961,7 +6970,7 @@ snapshots:
       '@eslint-react/kit': 1.53.1(eslint@9.39.2)(typescript@5.8.2)
       '@typescript-eslint/utils': 8.54.0(eslint@9.39.2)(typescript@5.8.2)
       ts-pattern: 5.9.0
-      zod: 4.1.13
+      zod: 4.3.6
     transitivePeerDependencies:
       - eslint
       - supports-color
@@ -13559,9 +13568,9 @@ snapshots:
 
   yoctocolors@2.1.2: {}
 
-  zod-openapi@5.4.6(zod@4.1.13):
+  zod-openapi@5.4.6(zod@4.3.6):
     dependencies:
-      zod: 4.1.13
+      zod: 4.3.6
 
   zod-to-json-schema@3.25.1(zod@3.25.76):
     dependencies:
@@ -13574,6 +13583,6 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.1.13: {}
+  zod@4.3.6: {}
 
   zwitch@2.0.4: {}
