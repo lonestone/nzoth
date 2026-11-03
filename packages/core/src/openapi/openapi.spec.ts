@@ -111,6 +111,44 @@ describe('openapi', () => {
     })
   })
 
+  describe('implied patterns', () => {
+    it('should drop the pattern a format implies, at any depth', () => {
+      const result = getOpenApiSchema(z.object({ ids: z.array(z.uuid()), mail: z.email() })) as any
+
+      expect(result.properties.ids.items).toEqual({ type: 'string', format: 'uuid' })
+      expect(result.properties.mail).toEqual({ type: 'string', format: 'email' })
+    })
+
+    it('should drop it for every format generators turn into a validator', () => {
+      expect((getOpenApiSchema(z.ipv4()) as any).pattern).toBeUndefined()
+      expect((getOpenApiSchema(z.ipv6()) as any).pattern).toBeUndefined()
+      expect((getOpenApiSchema(z.iso.date()) as any).pattern).toBeUndefined()
+      expect((getOpenApiSchema(z.iso.datetime()) as any).pattern).toBeUndefined()
+    })
+
+    it('should keep it under a format generators emit as a plain string', () => {
+      for (const schema of [z.nanoid(), z.ulid(), z.cuid(), z.base64(), z.hostname(), z.iso.duration(), z.string().lowercase()])
+        expect((getOpenApiSchema(schema) as any).pattern).toBeDefined()
+    })
+
+    it('should keep it when the validator takes options that change it', () => {
+      expect((getOpenApiSchema(z.iso.datetime({ offset: true })) as any).pattern).toBeDefined()
+    })
+
+    it('should keep a pattern that constrains differently', () => {
+      expect((getOpenApiSchema(z.guid()) as any).pattern).toBeDefined()
+      expect((getOpenApiSchema(z.uuidv4()) as any).pattern).toBeDefined()
+      expect((getOpenApiSchema(z.email({ pattern: /^a@b\.co$/ })) as any).pattern).toBeDefined()
+      expect((getOpenApiSchema(z.string().regex(/^[a-z]{2}$/)) as any).pattern).toBeDefined()
+    })
+
+    it('should leave a property named pattern', () => {
+      const result = getOpenApiSchema(z.object({ format: z.string(), pattern: z.string() })) as any
+
+      expect(result.properties.pattern).toEqual({ type: 'string' })
+    })
+  })
+
   describe('integration with meta information', () => {
     it('should preserve meta information in OpenAPI schema', () => {
       const schema = z.string().meta({

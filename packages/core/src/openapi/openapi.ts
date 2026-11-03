@@ -6,6 +6,7 @@ import type {
 } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import type { ZodType } from 'zod'
 import { SwaggerModule } from '@nestjs/swagger'
+import { z } from 'zod'
 import { createDocument, type CreateDocumentOptions, createSchema } from 'zod-openapi'
 
 // Define schema types
@@ -29,6 +30,29 @@ const OPENAPI_CACHE = new WeakMap<ZodType<any>, {
   schema: SchemaObject
   components?: { schemas?: Record<string, SchemaObject> }
 }>()
+
+// The patterns Zod exports for the standard formats client generators turn into
+// a validator. Under any other format (`nanoid`, `ulid`, `lowercase`...), generators
+// emit a plain string and the pattern is the only validation left, so it stays.
+const IMPLIED_PATTERNS: Record<string, string | undefined> = {
+  'uuid': z.toJSONSchema(z.uuid()).pattern,
+  'email': z.toJSONSchema(z.email()).pattern,
+  'ipv4': z.toJSONSchema(z.ipv4()).pattern,
+  'ipv6': z.toJSONSchema(z.ipv6()).pattern,
+  'date': z.toJSONSchema(z.iso.date()).pattern,
+  'date-time': z.toJSONSchema(z.iso.datetime()).pattern,
+}
+
+/**
+ * Removes a `pattern` that only repeats what its `format` implies, which client
+ * generators would otherwise emit as a redundant regex. A pattern that differs
+ * from the default (`z.guid()`, `z.uuidv4()`, a custom regex) is a real constraint
+ * and stays.
+ */
+const removeImpliedPattern: NonNullable<CreateDocumentOptions['override']> = ({ jsonSchema }) => {
+  if (jsonSchema.format && jsonSchema.pattern === IMPLIED_PATTERNS[jsonSchema.format])
+    delete jsonSchema.pattern
+}
 
 /**
  * Converts a Zod schema to OpenAPI schema object and registers it in the schema storage
@@ -56,7 +80,7 @@ export function getOpenApiSchema<T>(schema: ZodType<T>): SchemaObject {
     return cachedSchema
   }
 
-  const result = createSchema(schema)
+  const result = createSchema(schema, { opts: { override: removeImpliedPattern } })
   const schemaObject = result.schema as SchemaObject
 
   const schemaId = (schema as any)._def?.openapi?.id || schemaObject.title
