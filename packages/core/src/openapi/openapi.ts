@@ -30,6 +30,12 @@ const OPENAPI_CACHE = new WeakMap<ZodType<any>, {
   components?: { schemas?: Record<string, SchemaObject> }
 }>()
 
+// Every conversion done so far, to redo them once createOpenApiDocument gets its config
+const CONVERTED_SCHEMAS = new Map<ZodType<any>, SchemaObject>()
+
+// The original of each copy registerSchemaRef stores, to register it again after a conversion is redone
+const REGISTERED_ORIGINALS = new WeakMap<SchemaObject, SchemaObject>()
+
 /**
  * Converts a Zod schema to OpenAPI schema object and registers it in the schema storage
  *
@@ -75,14 +81,65 @@ export function getOpenApiSchema<T>(schema: ZodType<T>): SchemaObject {
     schema: schemaObject,
     components: result.components as any,
   })
+  CONVERTED_SCHEMAS.set(schema, schemaObject)
 
   return schemaObject
+}
+
+/**
+ * Makes `target` deeply equal to `source` while keeping the identity of its nested
+ * objects, which the decorators already handed to the Swagger metadata.
+ */
+function replaceInPlace(target: Record<string, any>, source: Record<string, any>) {
+  for (const key of Object.keys(target)) {
+    if (!(key in source))
+      delete target[key]
+  }
+  for (const [key, value] of Object.entries(source)) {
+    const current = target[key]
+    const sameShape = typeof current === 'object' && current !== null
+      && typeof value === 'object' && value !== null
+      && Array.isArray(current) === Array.isArray(value)
+    if (sameShape)
+      replaceInPlace(current, value)
+    else
+      target[key] = value
+  }
+  if (Array.isArray(target) && Array.isArray(source))
+    target.length = source.length
+}
+
+/**
+ * Decorators convert their schemas at import time, before the config exists, and
+ * `createDocument` only receives the resulting JSON. Redo the conversions with the
+ * config, in place, so it reaches the schemas the decorators already handed out.
+ */
+function applyConfigToConvertedSchemas(config: CreateDocumentOptions) {
+  for (const [schema, schemaObject] of CONVERTED_SCHEMAS) {
+    const result = createSchema(schema, { opts: config })
+    replaceInPlace(schemaObject, result.schema)
+    Object.entries(result.components?.schemas ?? {}).forEach(([name, s]) => {
+      SCHEMA_STORAGE.Other.set(name, s as SchemaObject)
+    })
+  }
+
+  // registerSchemaRef stored copies: register them again from their updated originals
+  for (const [type, typeMap] of Object.entries(SCHEMA_STORAGE) as [SchemaType, Map<string, SchemaObject>][]) {
+    for (const [name, stored] of typeMap.entries()) {
+      const original = REGISTERED_ORIGINALS.get(stored)
+      if (original)
+        registerSchemaRef(name, original, type)
+    }
+  }
 }
 
 /**
  * Adds all registered schemas to the Swagger document
  */
 export function createOpenApiDocument(app: INestApplication, swaggerConfig: Omit<OpenAPIObject, 'paths'>, zodOpenApiConfig?: CreateDocumentOptions) {
+  if (zodOpenApiConfig)
+    applyConfigToConvertedSchemas(zodOpenApiConfig)
+
   const document = SwaggerModule.createDocument(app, swaggerConfig)
 
   document.components = document.components || {}
@@ -164,6 +221,7 @@ export function registerSchemaRef(
   }
 
   const cleanedSchema = cleanupSchema(schema)
+  REGISTERED_ORIGINALS.set(cleanedSchema, schema)
 
   // Store the schema in the appropriate type map
   SCHEMA_STORAGE[type].set(name, cleanedSchema)
