@@ -6,7 +6,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { createFilterQueryStringSchema } from '../filtering/filtering'
 import { createSortingQueryStringSchema } from '../sorting/sorting'
+import { TypedBody } from '../validation/typed-body.decorator'
 import { TypedController } from '../validation/typed-controller.decorator'
+import { TypedParam } from '../validation/typed-param.decorator'
+import { TypedQuery, TypedQueryObject } from '../validation/typed-query.decorator'
 import { TypedRoute } from '../validation/typed-route.decorator'
 import {
   autoRegisterSchema,
@@ -406,6 +409,77 @@ describe('openapi', () => {
       expect(oneSchema).toEqual({ $ref: '#/components/schemas/User' })
 
       await app.close()
+    })
+  })
+
+  describe('createOpenApiDocument with a config', () => {
+    async function buildDocument(config?: Parameters<typeof createOpenApiDocument>[2]) {
+      const Nested = z.object({ ref: z.uuid() }).meta({ title: 'ConfigNested' })
+      const BodySchema = z.object({ id: z.uuid(), nested: Nested, list: z.array(z.uuid()) }).meta({ title: 'ConfigBody' })
+      const ResponseSchema = z.object({ id: z.uuid() }).meta({ title: 'ConfigResponse' })
+
+      @TypedController('config')
+      class ConfigController {
+        @TypedRoute.Post(':id', ResponseSchema)
+        update(
+          @TypedParam('id', z.uuid()) id: string,
+          @TypedBody(BodySchema) body: unknown,
+          @TypedQuery('single', z.uuid()) single: string,
+          @TypedQueryObject(z.object({ fromObject: z.uuid() })) query: unknown,
+        ) {
+          return { id, body, single, query }
+        }
+      }
+
+      @Module({ controllers: [ConfigController] })
+      class TestModule {}
+
+      const moduleRef = await Test.createTestingModule({ imports: [TestModule] }).compile()
+      const app = moduleRef.createNestApplication()
+      await app.init()
+      const swaggerConfig = new DocumentBuilder().setOpenAPIVersion('3.1.0').setTitle('Test').setVersion('1.0.0').build()
+      const doc = createOpenApiDocument(app, swaggerConfig as any, config)
+      await app.close()
+      return doc as any
+    }
+
+    const markUuids: NonNullable<Parameters<typeof createOpenApiDocument>[2]> = {
+      override: ({ jsonSchema }) => {
+        if (jsonSchema.format === 'uuid')
+          jsonSchema.description = 'overridden'
+      },
+    }
+
+    it('should apply override to the schemas of every decorator', async () => {
+      const doc = await buildDocument(markUuids)
+      const schemas = doc.components.schemas
+      const parameters = doc.paths['/config/{id}'].post.parameters
+      const parameter = (name: string) => parameters.find((p: any) => p.name === name).schema
+
+      expect(parameter('id').description).toBe('overridden')
+      expect(parameter('single').description).toBe('overridden')
+      expect(parameter('fromObject').description).toBe('overridden')
+      expect(schemas.ConfigBody.properties.id.description).toBe('overridden')
+      expect(schemas.ConfigBody.properties.list.items.description).toBe('overridden')
+      expect(schemas.ConfigNested.properties.ref.description).toBe('overridden')
+      expect(schemas.ConfigResponse.properties.id.description).toBe('overridden')
+    })
+
+    it('should let override remove a keyword', async () => {
+      const doc = await buildDocument({
+        override: ({ jsonSchema }) => {
+          delete jsonSchema.pattern
+        },
+      })
+
+      expect(JSON.stringify(doc)).not.toContain('"pattern"')
+    })
+
+    it('should leave the document untouched without a config', async () => {
+      const doc = await buildDocument()
+
+      expect(doc.components.schemas.ConfigResponse.properties.id.pattern).toBeDefined()
+      expect(JSON.stringify(doc)).not.toContain('overridden')
     })
   })
 
